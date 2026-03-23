@@ -172,6 +172,12 @@ class Connection:
         except asyncio.IncompleteReadError:
             logger.warning("Соединение разорвано (неполное чтение)")
             self._connected = False
+            # Завершаем все ожидающие запросы с ошибкой
+            err = ConnectionError("Соединение разорвано")
+            for fut in list(self._pending.values()):
+                if not fut.done():
+                    fut.set_exception(err)
+            self._pending.clear()
         except asyncio.CancelledError:
             pass
         except Exception as e:
@@ -182,13 +188,9 @@ class Connection:
         """Диспетчеризация входящего пакета."""
         seq = packet.seq
 
-        # Пакеты с опкодом >= 128 — серверные уведомления (push).
-        # Они никогда не являются ответами на наши запросы,
-        # даже если seq случайно совпадает. Отправляем прямо в handlers.
-        is_notification = packet.opcode >= 128
-
-        # Проверяем, есть ли ожидающий ответ по seq
-        if not is_notification and seq in self._pending:
+        # Сначала проверяем ожидающие ответы по seq — это приоритет.
+        # Важно: ответы на наши запросы могут иметь opcode >= 128 (например MSG_REACTION=178).
+        if seq in self._pending:
             fut = self._pending.pop(seq)
             if not fut.done():
                 fut.set_result(packet)

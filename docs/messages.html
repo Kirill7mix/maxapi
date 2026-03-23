@@ -432,16 +432,57 @@ msg_id = result[<span class="st">"message"</span>][<span class="st">"id"</span>]
       <span class="method-opcode">MSG_REACTION · opcode 178</span>
     </div>
     <div class="method-body">
-      <p>Ставит реакцию на сообщение.</p>
+      <p>Ставит реакцию на сообщение. Fire-and-forget (ответ не ожидается).</p>
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
           <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
           <tr><td><code>msg_id</code></td><td class="type">int</td><td>ID сообщения</td></tr>
-          <tr><td><code>reaction</code></td><td class="type">str</td><td>Эмодзи или код реакции, например <code>"👍"</code></td></tr>
+          <tr><td><code>reaction</code></td><td class="type">str</td><td>Эмодзи реакции, например <code>"👍"</code></td></tr>
         </tbody>
       </table>
-      <div class="returns"><strong>→ dict</strong></div>
+      <pre><span class="kw">await</span> client.<span class="fn">react</span>(chat_id=<span class="nb">63530148</span>, msg_id=<span class="nb">1234</span>, reaction=<span class="st">"🤣"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- cancel_reaction -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>cancel_reaction(chat_id, msg_id)</code>
+      <span class="method-opcode">MSG_CANCEL_REACTION · opcode 179</span>
+    </div>
+    <div class="method-body">
+      <p>Убирает реакцию с сообщения. Fire-and-forget.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>msg_id</code></td><td class="type">int</td><td>ID сообщения</td></tr>
+        </tbody>
+      </table>
+      <pre><span class="kw">await</span> client.<span class="fn">cancel_reaction</span>(chat_id=<span class="nb">63530148</span>, msg_id=<span class="nb">1234</span>)</pre>
+    </div>
+  </div>
+
+  <!-- send_sticker -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>send_sticker(chat_id, sticker_id)</code>
+      <span class="method-opcode">MSG_SEND · opcode 64</span>
+    </div>
+    <div class="method-body">
+      <p>Удобная обёртка для отправки стикера. Эквивалентна <code>send_message(chat_id, "", attaches=[…])</code>.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>sticker_id</code></td><td class="type">int</td><td>ID стикера</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> — ответ сервера с полем <code>message</code></div>
+      <pre>r = <span class="kw">await</span> client.<span class="fn">send_sticker</span>(chat_id=<span class="nb">63530148</span>, sticker_id=<span class="nb">1083866299</span>)</pre>
     </div>
   </div>
 

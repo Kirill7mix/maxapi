@@ -1146,13 +1146,37 @@ class MaxClient:
         """Получает превью ссылки (LINK_INFO, opcode 89)."""
         return await self._send_command(OpCode.LINK_INFO, {"url": url})
 
-    async def react(self, chat_id: str, msg_id: str, reaction: str) -> dict:
-        """Ставит реакцию (MSG_REACTION, opcode 178)."""
-        return await self._send_command(OpCode.MSG_REACTION, {
-            "chatId": chat_id,
-            "messageId": msg_id,
-            "reaction": reaction,
+    async def react(self, chat_id: int, msg_id: int, reaction: str) -> None:
+        """Ставит реакцию (MSG_REACTION, opcode 178). Fire-and-forget."""
+        pkt = Packet(opcode=OpCode.MSG_REACTION, params={
+            "chatId": int(chat_id),
+            "messageId": int(msg_id),
+            "reaction": {"reactionType": "EMOJI", "id": reaction},
         })
+        await self._conn.send(pkt, wait_response=False)
+
+    async def cancel_reaction(self, chat_id: int, msg_id: int) -> None:
+        """Убирает реакцию (MSG_CANCEL_REACTION, opcode 179). Fire-and-forget."""
+        pkt = Packet(opcode=OpCode.MSG_CANCEL_REACTION, params={
+            "chatId": int(chat_id),
+            "messageId": int(msg_id),
+        })
+        await self._conn.send(pkt, wait_response=False)
+
+    async def send_sticker(self, chat_id: int, sticker_id: int) -> dict:
+        """Отправляет стикер в чат.
+
+        Args:
+            chat_id: ID чата.
+            sticker_id: ID стикера.
+
+        Returns:
+            dict: Ответ сервера с полем 'message'.
+        """
+        return await self.send_message(
+            chat_id, "",
+            attaches=[{"_type": "STICKER", "stickerId": int(sticker_id)}],
+        )
 
     async def send_ping(self) -> dict:
         """Отправляет PING (opcode 1)."""

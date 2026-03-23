@@ -63,21 +63,24 @@ def encode_packet(
         # Сжимаем LZ4 (аналог hnc.c)
         compressed = lz4.block.compress(payload, store_size=False)
         compressed_len = len(compressed)
-        ratio = (payload_len // compressed_len) + 1
-        length_field = (ratio << 24) | compressed_len
-        header = struct.pack(
-            ">bbHHI",
-            version, cmd, seq & 0xFFFF, opcode & 0xFFFF, length_field
-        )
-        return header + compressed
-    else:
-        # Без сжатия (аналог hnc.b)
-        length_field = payload_len  # compression ratio = 0
-        header = struct.pack(
-            ">bbHHI",
-            version, cmd, seq & 0xFFFF, opcode & 0xFFFF, length_field
-        )
-        return header + payload
+        if compressed_len < payload_len:
+            # Сжатие помогло — отправляем сжатый payload
+            ratio = (payload_len // compressed_len) + 1
+            length_field = (ratio << 24) | compressed_len
+            header = struct.pack(
+                ">bbHHI",
+                version, cmd, seq & 0xFFFF, opcode & 0xFFFF, length_field
+            )
+            return header + compressed
+        # LZ4 не сжал (маленький payload) — отправляем без сжатия
+
+    # Без сжатия (аналог hnc.b)
+    length_field = payload_len  # compression ratio = 0
+    header = struct.pack(
+        ">bbHHI",
+        version, cmd, seq & 0xFFFF, opcode & 0xFFFF, length_field
+    )
+    return header + payload
 
 
 def decode_header(data: bytes) -> Tuple[int, int, int, int, int, int]:
