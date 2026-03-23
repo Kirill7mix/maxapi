@@ -14,12 +14,13 @@ class Message:
     Входящее или исходящее сообщение (опкод NOTIF_MESSAGE = 128).
 
     Атрибуты:
-        id        — уникальный ID сообщения
-        chat_id   — ID чата
-        sender_id — UID отправителя
-        text      — текст сообщения
-        time_ms   — время в миллисекундах
-        raw       — полный dict из сервера (params пакета)
+        id          — уникальный ID сообщения
+        chat_id     — ID чата
+        sender_id   — UID отправителя
+        sender_name — имя отправителя (из кэша контактов, или str(sender_id))
+        text        — текст сообщения
+        time_ms     — время в миллисекундах
+        raw         — полный dict из сервера (params пакета)
 
     Методы:
         await message.reply("текст")  — ответить в тот же чат
@@ -48,6 +49,23 @@ class Message:
     def is_outgoing(self) -> bool:
         """True — если сообщение отправили мы сами."""
         return self.sender_id == self._client.uid
+
+    @property
+    def sender_name(self) -> str:
+        """Имя отправителя из кэша контактов, или строка с UID если не найден."""
+        for contact in self._client._contacts:
+            if contact.get("id") == self.sender_id:
+                for name_entry in contact.get("names", []):
+                    first = name_entry.get("firstName", "")
+                    last = name_entry.get("lastName", "")
+                    full = f"{first} {last}".strip()
+                    if full:
+                        return full
+                break
+        # Проверяем профиль самого клиента
+        if self.sender_id == self._client.uid:
+            return self._client._profile.get("name", str(self.sender_id))
+        return str(self.sender_id)
 
     async def reply(self, text: str) -> Dict[str, Any]:
         """Ответить в тот же чат."""
