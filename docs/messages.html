@@ -104,6 +104,7 @@ fmt = (FormattedText()
           <tr><td><code>.add(text)</code></td><td>—</td><td>Обычный текст (без форматирования)</td></tr>
         </tbody>
       </table>
+      <div class="note"><span class="icon">ℹ️</span><div>Живая проверка в чате <code>0</code> (Избранное) подтвердила не только отдельные типы, но и смешанное форматирование по нескольким кускам текста. Сервер сохранил <code>elements</code> и в прямом ответе <code>send_message()</code>, и в <code>get_chat_history()</code>.</div></div>
 
       <h3>Wire-формат <code>elements</code></h3>
       <p>Массив <code>elements</code> передаётся внутри объекта <code>message</code>. Каждый элемент — это объект с полями:</p>
@@ -117,6 +118,7 @@ fmt = (FormattedText()
         Поле <code>"from"</code> <strong>не передаётся</strong> если смещение = 0. Сервер не принимает
         <code>"from": 0</code> — форматирование не отображается. Библиотека обрабатывает это автоматически.
       </div></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Отдельно проверен zero-offset кейс: если первый форматированный фрагмент начинается с первого символа, библиотека корректно опускает поле <code>from</code>, а сервер всё равно возвращает рабочую разметку.</div></div>
     </div>
   </div>
 
@@ -274,7 +276,7 @@ client = MaxClient(<span class="st">"my_session"</span>)
       <span class="method-opcode">PHOTO_UPLOAD + HTTP · opcode 80</span>
     </div>
     <div class="method-body">
-      <p>Нижнеуровневый метод: загружает байты изображения и возвращает <code>photoToken</code> — строку, пригодную для вставки в <code>attaches</code> вручную. Используется внутри <code>send_photo()</code>, но может вызываться напрямую.</p>
+      <p>Нижнеуровневый метод: загружает байты изображения и возвращает <code>photoToken</code> — строку, пригодную для вставки в <code>attaches</code> вручную. Используется внутри <code>send_photo()</code>, но может вызываться напрямую. Подтверждено в бою ✅</p>
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
@@ -484,7 +486,7 @@ result = <span class="kw">await</span> client.<span class="fn">send_message</spa
       <span class="method-opcode">MSG_SEND · opcode 64</span>
     </div>
     <div class="method-body">
-      <p>Удобная обёртка для отправки стикера. Эквивалентна <code>send_message(chat_id, "", attaches=[…])</code>.</p>
+      <p>Удобная обёртка для отправки стикера. Эквивалентна <code>send_message(chat_id, "", attaches=[…])</code>. Подтверждено в бою ✅</p>
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
@@ -493,6 +495,7 @@ result = <span class="kw">await</span> client.<span class="fn">send_message</spa
         </tbody>
       </table>
       <div class="returns"><strong>→ dict</strong> — ответ сервера с полем <code>message</code></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Живая проверка на <code>sticker_id=1083866299</code> вернула сообщение со вложением <code>attaches[0]._type=&quot;STICKER&quot;</code> и тем же <code>stickerId</code>.</div></div>
       <pre>r = <span class="kw">await</span> client.<span class="fn">send_sticker</span>(chat_id=<span class="nb">63530148</span>, sticker_id=<span class="nb">1083866299</span>)</pre>
     </div>
   </div>

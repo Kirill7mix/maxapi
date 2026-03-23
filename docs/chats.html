@@ -222,7 +222,8 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
       <span class="method-opcode">CHAT_CREATE · opcode 63</span>
     </div>
     <div class="method-body">
-      <p>Создаёт новый групповой чат.</p>
+      <p>Создаёт новый групповой чат. Статус текущей Python-обёртки: <strong>проблемный / не подтверждён</strong>.</p>
+      <div class="warn"><span class="icon">⚠️</span><div>Живая проверка показала, что текущий вызов <code>create_chat(title, member_ids=None)</code> стабильно возвращает <code>{"error": "proto.opcode", "message": "Unknown opcode"}</code>. Это указывает на несоответствие между текущей Python-реализацией и фактическим серверным протоколом.</div></div>
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
@@ -246,8 +247,8 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
       <span class="method-opcode">CHAT_MEMBERS · opcode 59</span>
     </div>
     <div class="method-body">
-      <p>Список участников чата.</p>
-      <div class="warn"><span class="icon">⚠️</span><div>Ограничение то же, что у <code>get_chat_info()</code>: для личных диалогов сервер не возвращает список участников. Используйте этот метод только для групп / каналов.</div></div>
+      <p>Список участников чата. Подтверждено в бою ✅</p>
+      <div class="warn"><span class="icon">⚠️</span><div>Для личных диалогов метод не подходит. Для минусовых <code>CHAT</code>-чатов метод успешно отработал и у владельца, и у обычного участника. Для некоторых <code>CHANNEL</code> сервер может вернуть <code>chat.denied / User is not admin</code>, если у сессии недостаточно прав.</div></div>
       <div class="returns"><strong>→ dict</strong> с ключом <code>members</code></div>
     </div>
   </div>
@@ -260,7 +261,8 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
       <span class="method-opcode">CHAT_JOIN · opcode 57</span>
     </div>
     <div class="method-body">
-      <p>Присоединяется к публичному чату/каналу по invite-ссылке.</p>
+      <p>Присоединяется к публичному чату/каналу по invite-ссылке. Подтверждено в бою ✅</p>
+      <div class="note"><span class="icon">ℹ️</span><div>Живая проверка на <code>TEST</code> через реальную invite-ссылку вернула объект <code>chat</code> и control event <code>joinByLink</code> в последнем сообщении чата.</div></div>
       <div class="returns"><strong>→ dict</strong></div>
       <pre><span class="kw">await</span> client.<span class="fn">join_chat</span>(<span class="st">"https://max.ru/join/..."</span>)</pre>
     </div>
@@ -273,7 +275,8 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
       <span class="method-opcode">CHAT_LEAVE · opcode 58</span>
     </div>
     <div class="method-body">
-      <p>Покидает чат.</p>
+      <p>Покидает чат. Подтверждено в бою ✅</p>
+      <div class="note"><span class="icon">ℹ️</span><div>В живой проверке сервер вернул служебное сообщение с вложением <code>{"_type": "CONTROL", "event": "leave"}</code>.</div></div>
       <div class="returns"><strong>→ dict</strong></div>
     </div>
   </div>
