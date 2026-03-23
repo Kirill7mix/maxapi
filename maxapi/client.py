@@ -915,22 +915,23 @@ class MaxClient:
         }
         return await self._send_command(OpCode.MSG_SEND, params)
 
-    async def forward_message(self, to_chat_id: int, from_chat_id: int, message_id: int, text: str = "") -> dict:
+    async def forward_message(self, to_chat_id: int, from_chat_id: int, message_id: int) -> dict:
         """
         Пересылает сообщение в другой (или тот же) чат (MSG_SEND с link.type=FORWARD).
+
+        Сервер не поддерживает текст-комментарий при пересылке — text всегда пустой.
 
         Args:
             to_chat_id: ID чата-получателя.
             from_chat_id: ID чата-источника.
             message_id: ID пересылаемого сообщения.
-            text: Дополнительный текст (необязательно).
 
         Returns:
             Ответ сервера на MSG_SEND.
         """
         message: dict = {
             "cid": int(time.time() * 1000),
-            "text": text,
+            "text": "",
             "detectShare": False,
             "isLive": False,
             "link": {
@@ -968,10 +969,17 @@ class MaxClient:
         if not upload_url:
             raise RuntimeError(f"PHOTO_UPLOAD вернул неожиданный ответ: {r}")
 
-        # 2. Multipart upload
+        # 2. Multipart upload (detect PNG vs JPEG by magic bytes)
+        if image_data[:8] == b'\x89PNG\r\n\x1a\n':
+            upload_ct = "image/png"
+            upload_fn = "photo.png"
+        else:
+            upload_ct = "image/jpeg"
+            upload_fn = "photo.jpg"
+
         async with aiohttp.ClientSession() as session:
             form = aiohttp.FormData()
-            form.add_field("file", image_data, filename="photo.jpg", content_type="image/jpeg")
+            form.add_field("file", image_data, filename=upload_fn, content_type=upload_ct)
             async with session.post(upload_url, data=form) as resp:
                 body = await resp.json()
 
@@ -1033,9 +1041,9 @@ class MaxClient:
             "messageIds": msg_ids,
         })
 
-    async def get_chat_info(self, chat_id: str) -> dict:
+    async def get_chat_info(self, chat_id: int) -> dict:
         """Получает информацию о чате (CHAT_INFO, opcode 48)."""
-        return await self._send_command(OpCode.CHAT_INFO, {"chatId": chat_id})
+        return await self._send_command(OpCode.CHAT_INFO, {"chatId": int(chat_id)})
 
     async def create_chat(self, title: str, member_ids: List[str] = None) -> dict:
         """Создаёт новый чат (CHAT_CREATE, opcode 63)."""
@@ -1065,7 +1073,7 @@ class MaxClient:
 
     async def search_contacts(self, query: str) -> dict:
         """Поиск контактов (CONTACT_SEARCH, opcode 37)."""
-        return await self._send_command(OpCode.CONTACT_SEARCH, {"query": query})
+        return await self._send_command(OpCode.CONTACT_SEARCH, {"query": query, "count": 40})
 
     async def search(self, query: str) -> Dict[str, Any]:
         """
@@ -1100,7 +1108,7 @@ class MaxClient:
         public_result:   Dict = {}
         try:
             contacts_result, public_result = await asyncio.gather(
-                self._send_command(OpCode.CONTACT_SEARCH, {"query": query}),
+                self._send_command(OpCode.CONTACT_SEARCH, {"query": query, "count": 20}),
                 self._send_command(OpCode.PUBLIC_SEARCH,  {"query": query, "count": 20}),
                 return_exceptions=True,
             )
@@ -1118,22 +1126,22 @@ class MaxClient:
             "public":   public_result.get("chats",    []) if isinstance(public_result,   dict) else [],
         }
 
-    async def send_typing(self, chat_id: str) -> None:
+    async def send_typing(self, chat_id: int) -> None:
         """Отправляет уведомление о наборе (MSG_TYPING, opcode 65)."""
-        pkt = Packet(opcode=OpCode.MSG_TYPING, params={"chatId": chat_id})
+        pkt = Packet(opcode=OpCode.MSG_TYPING, params={"chatId": int(chat_id)})
         await self._conn.send(pkt, wait_response=False)
 
-    async def mark_read(self, chat_id: str, msg_id: str) -> dict:
+    async def mark_read(self, chat_id: int, msg_id: int) -> dict:
         """Помечает сообщения как прочитанные (CHAT_MARK, opcode 50)."""
         return await self._send_command(OpCode.CHAT_MARK, {
-            "chatId": chat_id,
-            "messageId": msg_id,
+            "chatId": int(chat_id),
+            "messageId": int(msg_id),
         })
 
-    async def get_chat_members(self, chat_id: str, count: int = 100) -> dict:
+    async def get_chat_members(self, chat_id: int, count: int = 100) -> dict:
         """Получает список участников чата (CHAT_MEMBERS, opcode 59)."""
         return await self._send_command(OpCode.CHAT_MEMBERS, {
-            "chatId": chat_id,
+            "chatId": int(chat_id),
             "count": count,
         })
 
@@ -1147,7 +1155,7 @@ class MaxClient:
 
     async def get_link_info(self, url: str) -> dict:
         """Получает превью ссылки (LINK_INFO, opcode 89)."""
-        return await self._send_command(OpCode.LINK_INFO, {"url": url})
+        return await self._send_command(OpCode.LINK_INFO, {"link": url})
 
     async def react(self, chat_id: int, msg_id: int, reaction: str) -> None:
         """Ставит реакцию (MSG_REACTION, opcode 178). Fire-and-forget."""
