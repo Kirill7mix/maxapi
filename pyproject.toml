@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maxapi"
-version = "0.1.0"
+version = "0.1.1"
 description = "MAX Messenger Client API (reverse-engineered) — аналог Telethon для MAX (ex-TamTam)"
 readme = "README.md"
 requires-python = ">=3.10"
