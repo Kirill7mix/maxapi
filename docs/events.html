@@ -175,7 +175,7 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
     <tbody>
       <tr>
         <td><code>await msg.reply(text)</code></td>
-        <td>Ответить в тот же чат. Аналог <code>await client.send_message(msg.chat_id, text)</code></td>
+        <td>Ответить в тот же чат с цитированием исходного сообщения. Аналог <code>await client.send_message(msg.chat_id, text, reply_to=msg.id)</code></td>
       </tr>
     </tbody>
   </table>

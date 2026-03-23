@@ -68,8 +68,8 @@ class Message:
         return str(self.sender_id)
 
     async def reply(self, text: str) -> Dict[str, Any]:
-        """Ответить в тот же чат."""
-        return await self._client.send_message(self.chat_id, text)
+        """Ответить в тот же чат (с цитированием исходного сообщения)."""
+        return await self._client.send_message(self.chat_id, text, reply_to=self.id)
 
     def __repr__(self) -> str:
         direction = "OUT" if self.is_outgoing else "IN"

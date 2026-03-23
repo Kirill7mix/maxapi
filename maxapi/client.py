@@ -932,15 +932,15 @@ class MaxClient:
             attaches=attaches,
         )
 
-
+    async def edit_message(self, chat_id: int, msg_id: int, text: str) -> dict:
         """Редактирует сообщение (MSG_EDIT, opcode 67)."""
         return await self._send_command(OpCode.MSG_EDIT, {
-            "chatId": chat_id,
-            "messageId": msg_id,
+            "chatId": int(chat_id),
+            "messageId": int(msg_id),
             "text": text,
         })
 
-    async def delete_messages(self, chat_id: str, msg_ids: List[str]) -> dict:
+    async def delete_messages(self, chat_id: int, msg_ids: List[int]) -> dict:
         """Удаляет сообщения (MSG_DELETE, opcode 66)."""
         return await self._send_command(OpCode.MSG_DELETE, {
             "chatId": chat_id,

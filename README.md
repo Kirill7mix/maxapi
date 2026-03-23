@@ -42,10 +42,10 @@ async def main():
             await client.sign_up(first_name=name, register_token=result.register_token)
 
         # Работа с API
-        profile = await client.get_profile()
-        chats = await client.get_chats()
-        await client.send_message(chat_id="...", text="Привет!")
-        await client.send_photo(chat_id="...", file_path="photo.jpg", caption="Подпись")
+        profile = client.get_profile()          # из кэша (sync)
+        chats = await client.get_chats()         # из кэша LOGIN
+        await client.send_message(chat_id=12345678, text="Привет!")
+        await client.send_photo(chat_id=12345678, image="photo.jpg", caption="Подпись")
 
 asyncio.run(main())
 ```
@@ -69,7 +69,7 @@ async def on_message(msg: Message):
     if msg.is_outgoing:
         return
     print(f"[{msg.chat_id}] {msg.sender_name}: {msg.text}")
-    await client.send_message(msg.chat_id, text="Привет!", reply_to=msg.id)
+    await msg.reply("Привет!")  # цитирует исходное сообщение
 
 asyncio.run(client.run())  # connect() + run_until_disconnected()
 ```
@@ -112,8 +112,10 @@ length   (4 байта)  = [compression_ratio << 24 | payload_length]
 
 | Метод                | OpCode  | Описание                     |
 |----------------------|---------|------------------------------|
-| `get_profile()`      | 16      | Профиль пользователя         |
-| `get_chats()`        | 53      | Список чатов                 |
+| `get_profile()`      | —       | Профиль из кэша (sync)       |
+| `fetch_profile()`    | 16      | Свежий профиль с сервера     |
+| `get_chats()`        | —       | Чаты из кэша LOGIN (async)   |
+| `poll_chats()`       | 53      | Delta-poll изменённых чатов   |
 | `get_chat_history()` | 49      | История сообщений чата       |
 | `send_message()`     | 64      | Отправка сообщения           |
 | `send_photo()`       | 64+80   | Отправка фото в чат          |
