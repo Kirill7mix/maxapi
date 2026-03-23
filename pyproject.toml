@@ -29,10 +29,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/YOUR_USERNAME/maxapi"
-Documentation = "https://YOUR_USERNAME.github.io/maxapi/"
-Repository = "https://github.com/YOUR_USERNAME/maxapi"
-Issues = "https://github.com/YOUR_USERNAME/maxapi/issues"
+Homepage = "https://github.com/Kirill7mix/maxapi"
+Documentation = "https://Kirill7mix.github.io/maxapi/"
+Repository = "https://github.com/Kirill7mix/maxapi"
+Issues = "https://github.com/Kirill7mix/maxapi/issues"
 
 [tool.setuptools.packages.find]
 include = ["maxapi*"]

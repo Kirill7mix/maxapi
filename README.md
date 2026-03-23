@@ -4,7 +4,7 @@
 Reverse-engineered из APK v26.9.0 (build 6637).  
 Аналог [Telethon](https://github.com/LonamiWebs/Telethon) для Telegram.
 
-📖 **Документация**: https://YOUR_USERNAME.github.io/maxapi/
+📖 **Документация**: https://Kirill7mix.github.io/maxapi/
 
 ---
 
@@ -13,13 +13,13 @@ Reverse-engineered из APK v26.9.0 (build 6637).
 ### Из GitHub (рекомендуется)
 
 ```bash
-pip install git+https://github.com/YOUR_USERNAME/maxapi.git
+pip install git+https://github.com/Kirill7mix/maxapi.git
 ```
 
 ### Для разработки (локально)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/maxapi.git
+git clone https://github.com/Kirill7mix/maxapi.git
 cd maxapi
 pip install -e .
 ```
