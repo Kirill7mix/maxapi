@@ -44,6 +44,16 @@
     push-архитектура работает. Opcode push-пакетов всегда ≥ 128.
   </div>
 
+  <div class="warn">
+    <span class="icon">⚠️</span>
+    <div>
+      У библиотеки два разных слоя данных:<br>
+      1. Обычные API-методы вроде <code>send_message()</code>, <code>get_chat_info()</code>, <code>search()</code> возвращают <strong>сырой dict</strong> сервера.<br>
+      2. События в декораторах <code>@client.on_message</code>, <code>@client.on_presence</code>, <code>@client.on_reaction</code> приходят как <strong>Python-объекты</strong> (<code>Message</code>, <code>PresenceEvent</code>, <code>ReactionEvent</code>).<br>
+      Поэтому у событий нужно читать атрибуты через точку: <code>msg.text</code>, <code>msg.chat_id</code>, <code>event.user_id</code>, а не через <code>.get()</code>.
+    </div>
+  </div>
+
   <!-- Архитектура -->
   <h2>Как это работает</h2>
   <ol style="line-height:2">
@@ -95,6 +105,7 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
         Декоратор для обработки входящих и исходящих сообщений.
         Передаёт объект <code>Message</code> с удобными полями.
       </p>
+      <div class="note"><span class="icon">ℹ️</span><div>Аргумент хендлера здесь не <code>dict</code>, а экземпляр класса <code>Message</code>. Правильно: <code>msg.text</code>, <code>msg.chat_id</code>, <code>msg.sender_id</code>. Неправильно: <code>msg.get("text")</code>.</div></div>
       <pre><span class="nd">@client.on_message</span>
 <span class="kw">async def</span> <span class="fn">on_msg</span>(msg: Message):
     <span class="kw">if</span> msg.is_outgoing:
@@ -116,6 +127,7 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
         Универсальный декоратор — регистрирует обработчик для любого opcode.
         Для NOTIF_TYPING передаёт объект <code>TypingEvent</code>, для NOTIF_PRESENCE — <code>PresenceEvent</code>, для NOTIF_MSG_REACTIONS_CHANGED — <code>ReactionEvent</code>, для остальных — сырой <code>dict</code>.
       </p>
+      <div class="note"><span class="icon">ℹ️</span><div>То есть у <code>@client.on(opcode)</code> тип аргумента зависит от opcode. Для typed-событий используйте атрибуты объекта, для остальных уведомлений — ключи словаря.</div></div>
       <pre><span class="kw">from</span> maxapi <span class="kw">import</span> OpCode
 <span class="kw">from</span> maxapi <span class="kw">import</span> TypingEvent, PresenceEvent, ReactionEvent
 
@@ -160,6 +172,11 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
   <h2 style="margin-top:36px">Класс <code>Message</code></h2>
   <p>Объект передаваемый в <code>@on_message</code> хендлер.</p>
 
+  <div class="note">
+    <span class="icon">ℹ️</span>
+    <div>Если нужен исходный серверный payload, он лежит в <code>msg.raw</code>. Это полезно, когда надо обратиться к нестандартному полю, которое ещё не вынесено в отдельный атрибут класса.</div>
+  </div>
+
   <table class="params-table">
     <thead><tr><th>Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
     <tbody>
@@ -192,7 +209,7 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
       </tr>
       <tr>
         <td><code>await msg.forward(to_chat_id)</code></td>
-        <td>Переслать это сообщение в другой чат.</td>
+        <td>Переслать это сообщение в другой чат. Комментарий при пересылке сервер не поддерживает.</td>
       </tr>
     </tbody>
   </table>

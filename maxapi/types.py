@@ -129,9 +129,9 @@ class Message:
         """
         return await self._client.send_message(self.chat_id, text, reply_to=self.id, **kwargs)
 
-    async def forward(self, to_chat_id: int, text: str = "") -> Dict[str, Any]:
+    async def forward(self, to_chat_id: int) -> Dict[str, Any]:
         """Переслать это сообщение в другой чат."""
-        return await self._client.forward_message(to_chat_id, self.chat_id, self.id, text=text)
+        return await self._client.forward_message(to_chat_id, self.chat_id, self.id)
 
     def __repr__(self) -> str:
         direction = "OUT" if self.is_outgoing else "IN"
