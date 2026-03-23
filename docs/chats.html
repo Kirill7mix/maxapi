@@ -223,7 +223,7 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
     </div>
     <div class="method-body">
       <p>Создаёт новый групповой чат. Статус текущей Python-обёртки: <strong>проблемный / не подтверждён</strong>.</p>
-      <div class="warn"><span class="icon">⚠️</span><div>Живая проверка показала, что текущий вызов <code>create_chat(title, member_ids=None)</code> стабильно возвращает <code>{"error": "proto.opcode", "message": "Unknown opcode"}</code>. Это указывает на несоответствие между текущей Python-реализацией и фактическим серверным протоколом.</div></div>
+      <div class="warn"><span class="icon">⚠️</span><div>Живая проверка на реальной авторизованной сессии показала, что текущий вызов <code>create_chat(title, member_ids=None)</code> стабильно возвращает <code>{"error": "proto.opcode", "message": "Unknown opcode"}</code>. Это указывает на несоответствие между текущей Python-реализацией и фактическим серверным протоколом.</div></div>
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>

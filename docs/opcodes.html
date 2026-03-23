@@ -48,6 +48,7 @@
   <p>
     Полный справочник wire-кодов операций MAX мессенджера.
   </p>
+  <div class="note"><span class="icon">ℹ️</span><div><strong>Статусы в таблице:</strong> <code>✅</code> — подтверждено живыми проверками; <code>❓</code> — пока под вопросом / не подтверждено; <code>⚠️</code> — частично, зависит от типа чата или прав; <code>❌</code> — проблемно для текущей Python-обёртки. Пустая ячейка означает, что opcode пока не проверялся отдельно.</div></div>
 
   <input class="search-box" id="searchInput" placeholder="🔍 Поиск по названию или коду..." oninput="filterTable()">
 
@@ -74,7 +75,7 @@
       <tr><td>AUTH_REQUEST</td><td>17</td><td>Запрос SMS-кода (send_code)</td><td>✅</td></tr>
       <tr><td>AUTH</td><td>18</td><td>Проверка SMS-кода (sign_in шаг 1)</td><td>✅</td></tr>
       <tr><td>LOGIN</td><td>19</td><td>Финальный вход, кэш данных</td><td>✅</td></tr>
-      <tr><td>AUTH_CONFIRM</td><td>23</td><td>Регистрация нового аккаунта</td><td>✅</td></tr>
+      <tr><td>AUTH_CONFIRM</td><td>23</td><td>Регистрация нового аккаунта</td><td></td></tr>
       <tr><td>AUTH_LOGIN_RESTORE_PASSWORD</td><td>101</td><td>Восстановление пароля</td><td></td></tr>
       <tr><td>AUTH_2FA_DETAILS</td><td>104</td><td>Детали 2FA</td><td></td></tr>
       <tr><td>AUTH_VALIDATE_PASSWORD</td><td>107</td><td>Проверка пароля 2FA</td><td></td></tr>
@@ -102,7 +103,7 @@
       <tr><td>CONTACT_ADD</td><td>33</td><td>Добавить в контакты</td><td></td></tr>
       <tr><td>CONTACT_UPDATE</td><td>34</td><td>Обновить контакт</td><td></td></tr>
       <tr><td>CONTACT_PRESENCE</td><td>35</td><td>Статус онлайн</td><td></td></tr>
-      <tr><td>CONTACT_LIST</td><td>36</td><td>Список контактов (BLOCKED/REMOVED)</td><td>✅</td></tr>
+      <tr><td>CONTACT_LIST</td><td>36</td><td>Список контактов (BLOCKED/REMOVED)</td><td></td></tr>
       <tr><td>CONTACT_SEARCH</td><td>37</td><td>Поиск пользователей</td><td></td></tr>
       <tr><td>CONTACT_MUTUAL</td><td>38</td><td>Общие контакты</td><td></td></tr>
       <tr><td>CONTACT_PHOTOS</td><td>39</td><td>Фотографии контакта</td><td></td></tr>
@@ -123,21 +124,21 @@
 
       <!-- Чаты -->
       <tr class="section-row"><td colspan="4">Чаты</td></tr>
-      <tr><td>CHAT_INFO</td><td>48</td><td>Информация о чате</td><td></td></tr>
+      <tr><td>CHAT_INFO</td><td>48</td><td>Информация о чате</td><td>❌</td></tr>
       <tr><td>CHAT_HISTORY</td><td>49</td><td>История сообщений</td><td>✅</td></tr>
-      <tr><td>CHAT_MARK</td><td>50</td><td>Пометить как прочитанное</td><td></td></tr>
+      <tr><td>CHAT_MARK</td><td>50</td><td>Пометить как прочитанное</td><td>✅</td></tr>
       <tr><td>CHAT_MEDIA</td><td>51</td><td>Медиа чата</td><td></td></tr>
       <tr><td>CHAT_DELETE</td><td>52</td><td>Удалить чат</td><td></td></tr>
-      <tr><td>CHATS_LIST</td><td>53</td><td>Список чатов (delta-API)</td><td></td></tr>
+      <tr><td>CHATS_LIST</td><td>53</td><td>Список чатов (delta-API)</td><td>❓</td></tr>
       <tr><td>CHAT_CLEAR</td><td>54</td><td>Очистить историю чата</td><td></td></tr>
       <tr><td>CHAT_UPDATE</td><td>55</td><td>Обновить настройки чата</td><td></td></tr>
       <tr><td>CHAT_CHECK_LINK</td><td>56</td><td>Проверить invite-ссылку</td><td></td></tr>
-      <tr><td>CHAT_JOIN</td><td>57</td><td>Вступить в чат по ссылке</td><td></td></tr>
-      <tr><td>CHAT_LEAVE</td><td>58</td><td>Покинуть чат</td><td></td></tr>
-      <tr><td>CHAT_MEMBERS</td><td>59</td><td>Список участников</td><td></td></tr>
+      <tr><td>CHAT_JOIN</td><td>57</td><td>Вступить в чат по ссылке</td><td>✅</td></tr>
+      <tr><td>CHAT_LEAVE</td><td>58</td><td>Покинуть чат</td><td>✅</td></tr>
+      <tr><td>CHAT_MEMBERS</td><td>59</td><td>Список участников</td><td>⚠️</td></tr>
       <tr><td>PUBLIC_SEARCH</td><td>60</td><td>Поиск публичных чатов</td><td></td></tr>
       <tr><td>CHAT_PERSONAL_CONFIG</td><td>61</td><td>Персональные настройки чата</td><td></td></tr>
-      <tr><td>CHAT_CREATE</td><td>63</td><td>Создать чат</td><td></td></tr>
+      <tr><td>CHAT_CREATE</td><td>63</td><td>Создать чат</td><td>❌</td></tr>
       <tr><td>CHAT_SEARCH</td><td>68</td><td>Поиск в чатах</td><td></td></tr>
       <tr><td>CHAT_SUBSCRIBE</td><td>75</td><td>Подписка на чат</td><td></td></tr>
       <tr><td>CHAT_MEMBERS_UPDATE</td><td>77</td><td>Обновление участников</td><td></td></tr>
@@ -151,9 +152,9 @@
       <!-- Сообщения -->
       <tr class="section-row"><td colspan="4">Сообщения</td></tr>
       <tr><td>MSG_SEND</td><td>64</td><td>Отправить сообщение</td><td>✅</td></tr>
-      <tr><td>MSG_TYPING</td><td>65</td><td>Уведомление о наборе текста</td><td></td></tr>
-      <tr><td>MSG_DELETE</td><td>66</td><td>Удалить сообщения</td><td></td></tr>
-      <tr><td>MSG_EDIT</td><td>67</td><td>Редактировать сообщение</td><td></td></tr>
+      <tr><td>MSG_TYPING</td><td>65</td><td>Уведомление о наборе текста</td><td>✅</td></tr>
+      <tr><td>MSG_DELETE</td><td>66</td><td>Удалить сообщения</td><td>✅</td></tr>
+      <tr><td>MSG_EDIT</td><td>67</td><td>Редактировать сообщение</td><td>✅</td></tr>
       <tr><td>MSG_SHARE_PREVIEW</td><td>70</td><td>Превью для шаринга</td><td></td></tr>
       <tr><td>MSG_GET</td><td>71</td><td>Получить сообщение по ID</td><td></td></tr>
       <tr><td>MSG_SEARCH_TOUCH</td><td>72</td><td>Инициализация поиска</td><td></td></tr>
@@ -164,8 +165,8 @@
       <tr><td>MSG_SEND_CALLBACK</td><td>118</td><td>Callback от кнопки бота</td><td></td></tr>
       <tr><td>SUSPEND_BOT</td><td>119</td><td>Приостановить бота</td><td></td></tr>
       <tr><td>GET_LAST_MENTIONS</td><td>127</td><td>Последние упоминания</td><td></td></tr>
-      <tr><td>MSG_REACTION</td><td>178</td><td>Поставить реакцию</td><td></td></tr>
-      <tr><td>MSG_CANCEL_REACTION</td><td>179</td><td>Убрать реакцию</td><td></td></tr>
+      <tr><td>MSG_REACTION</td><td>178</td><td>Поставить реакцию</td><td>✅</td></tr>
+      <tr><td>MSG_CANCEL_REACTION</td><td>179</td><td>Убрать реакцию</td><td>✅</td></tr>
       <tr><td>MSG_GET_REACTIONS</td><td>180</td><td>Список реакций</td><td></td></tr>
       <tr><td>MSG_GET_DETAILED_REACTIONS</td><td>181</td><td>Детальные реакции</td><td></td></tr>
       <tr><td>STICKER_CREATE</td><td>193</td><td>Создать стикер</td><td></td></tr>
@@ -180,14 +181,14 @@
 
       <!-- Медиа -->
       <tr class="section-row"><td colspan="4">Медиа и файлы</td></tr>
-      <tr><td>PHOTO_UPLOAD</td><td>80</td><td>Загрузить фото</td><td></td></tr>
+      <tr><td>PHOTO_UPLOAD</td><td>80</td><td>Загрузить фото</td><td>✅</td></tr>
       <tr><td>STICKER_UPLOAD</td><td>81</td><td>Загрузить стикер</td><td></td></tr>
       <tr><td>VIDEO_UPLOAD</td><td>82</td><td>Загрузить видео</td><td></td></tr>
       <tr><td>VIDEO_PLAY</td><td>83</td><td>Воспроизвести видео</td><td></td></tr>
       <tr><td>VIDEO_CHAT_CREATE_JOIN_LINK</td><td>84</td><td>Ссылка на видеозвонок</td><td></td></tr>
       <tr><td>FILE_UPLOAD</td><td>87</td><td>Загрузить файл</td><td></td></tr>
       <tr><td>FILE_DOWNLOAD</td><td>88</td><td>Скачать файл</td><td></td></tr>
-      <tr><td>LINK_INFO</td><td>89</td><td>Превью ссылки</td><td></td></tr>
+      <tr><td>LINK_INFO</td><td>89</td><td>Превью ссылки</td><td>✅</td></tr>
 
       <!-- Видеозвонки -->
       <tr class="section-row"><td colspan="4">Видеозвонки</td></tr>
