@@ -1034,12 +1034,28 @@ class MaxClient:
             "text": text,
         })
 
-    async def delete_messages(self, chat_id: int, msg_ids: List[int]) -> dict:
-        """Удаляет сообщения (MSG_DELETE, opcode 66)."""
-        return await self._send_command(OpCode.MSG_DELETE, {
-            "chatId": chat_id,
-            "messageIds": msg_ids,
-        })
+    async def delete_messages(self, chat_id: int, msg_ids: List[int], delete_for_all: bool = False) -> dict:
+        """
+        Удаляет сообщения (MSG_DELETE, opcode 66).
+
+        Args:
+            chat_id: ID чата.
+            msg_ids: Список ID сообщений.
+            delete_for_all: Если True, отправляет подтвержденный wire-режим
+                удаления у всех участников чата. По умолчанию False — удалить
+                только локально для текущего аккаунта.
+        """
+        params = {
+            "chatId": int(chat_id),
+            "messageIds": [int(msg_id) for msg_id in msg_ids],
+        }
+        if delete_for_all:
+            params.update({
+                "forMe": False,
+                "itemType": "REGULAR",
+                "notDeleteMessageFromDb": False,
+            })
+        return await self._send_command(OpCode.MSG_DELETE, params)
 
     async def get_chat_info(self, chat_id: int) -> dict:
         """Получает информацию о чате (CHAT_INFO, opcode 48)."""

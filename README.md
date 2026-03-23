@@ -130,7 +130,7 @@ length   (4 байта)  = [compression_ratio << 24 | payload_length]
 | `send_photo()`       | 64+80   | Отправка фото в чат          |
 | `upload_photo()`     | 80/HTTP | Загрузка фото, возврат token |
 | `edit_message()`     | 67      | Редактирование сообщения     |
-| `delete_messages()`  | 66      | Удаление сообщений           |
+| `delete_messages()`  | 66      | Удаление сообщений, включая delete-for-all |
 | `get_chat_info()`    | 48      | Информация о чате            |
 | `create_chat()`      | 63      | Создание чата                |
 | `get_contacts()`     | 36      | Список контактов             |

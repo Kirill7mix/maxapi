@@ -24,7 +24,7 @@ from maxapi.constants import OpCode
 from maxapi.types import Message, TypingEvent, PresenceEvent, ReactionEvent
 from maxapi.formatting import FormattedText
 
-__version__ = "0.2.0"
+__version__ = "2.1.0"
 __all__ = [
     "MaxClient",
     "Session",

@@ -101,6 +101,7 @@
         Delta-опрос: запрашивает у сервера чаты, изменившиеся с момента последнего маркера.
         Автоматически мёрджит изменения в кэш и обновляет маркер для следующего вызова.
       </p>
+      <div class="warn"><span class="icon">⚠️</span><div>Статус на март 2026: <strong>не подтверждено</strong>. В нескольких живых проверках метод возвращал пустой delta-список даже после нового исходящего сообщения и даже после создания нового чата в 15-секундном окне. Документацию ниже стоит читать как описание предполагаемого протокола, а не как подтверждённое рабочее поведение текущей Python-обёртки.</div></div>
 
       <h3>Как работает delta-sync</h3>
       <p>Протокол реализует delta-синхронизацию через поле <code>marker</code>:</p>
@@ -204,8 +205,10 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
       <span class="method-opcode">CHAT_INFO · opcode 48</span>
     </div>
     <div class="method-body">
-      <p>Возвращает полную информацию о чате.</p>
-      <div class="warn"><span class="icon">⚠️</span><div>Метод безопасно использовать для групп и каналов. Для <code>DIALOG</code> сервер обычно отвечает ошибкой в виде <code>{"error": ...}</code>, а на некоторых сессиях после этого ещё и рвёт TCP-соединение. После такого вызова может понадобиться переподключение.</div></div>
+      <p>Возвращает полную информацию о чате. Статус текущей Python-обёртки: <strong>проблемный / не подтверждён</strong>.</p>
+      <div class="warn"><span class="icon">⚠️</span><div>Живая проверка показала, что текущий вызов с параметром <code>{"chatId": id}</code> не совпадает с реальным ожидаемым wire-форматом сервера. Для <code>DIALOG</code> пришла ошибка <code>{"error": "proto.payload", "message": "'chatIds' or 'link' must be present"}</code>.</div></div>
+      <div class="warn"><span class="icon">⚠️</span><div>Дополнительная проверка на <code>CHANNEL</code> с отрицательным id привела к TCP-дисконнекту. Поэтому метод пока нельзя считать рабочим ни для <code>DIALOG</code>, ни для групп/каналов, несмотря на более ранние предположения.</div></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Практический вывод: проблема, вероятно, не в самом opcode 48, а в том, что Python-обёртка отправляет неправильную структуру параметров. До отдельной верификации безопаснее считать <code>get_chat_info()</code> экспериментальным методом.</div></div>
       <div class="returns"><strong>→ dict</strong></div>
       <pre>info = <span class="kw">await</span> client.<span class="fn">get_chat_info</span>(chat_id=<span class="nb">34540359</span>)</pre>
     </div>

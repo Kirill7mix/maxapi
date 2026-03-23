@@ -368,22 +368,30 @@ result = <span class="kw">await</span> client.<span class="fn">send_message</spa
   <div class="method">
     <div class="method-header">
       <span class="method-badge badge-async">async</span>
-      <code>delete_messages(chat_id, msg_ids)</code>
+      <code>delete_messages(chat_id, msg_ids, delete_for_all=False)</code>
       <span class="method-opcode">MSG_DELETE · opcode 66</span>
     </div>
     <div class="method-body">
-      <p>Удаляет одно или несколько сообщений.</p>
+      <p>Удаляет одно или несколько сообщений. Подтверждены оба режима: локальное удаление и удаление у всех ✅</p>
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
           <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
           <tr><td><code>msg_ids</code></td><td class="type">list[int]</td><td>Список ID сообщений</td></tr>
+          <tr><td><code>delete_for_all</code></td><td class="type">bool</td><td class="optional">Если <code>True</code>, удаляет сообщение у всех участников. По умолчанию <code>False</code> — удалить только у текущего аккаунта</td></tr>
         </tbody>
       </table>
       <div class="returns"><strong>→ dict</strong></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Локальный режим подтверждён ответом вида <code>{"chatId": 63530148, "messageIds": [116279557369692993]}</code>: сообщение исчезает из истории текущего аккаунта.</div></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Режим <code>delete_for_all=True</code> тоже подтверждён в живой проверке: сообщение было удалено у обеих сторон.</div></div>
       <pre><span class="kw">await</span> client.<span class="fn">delete_messages</span>(
     chat_id=<span class="nb">34540359</span>,
     msg_ids=[<span class="nb">116273301732920444</span>, <span class="nb">116273301732920445</span>]
+)</pre>
+      <pre><span class="kw">await</span> client.<span class="fn">delete_messages</span>(
+    chat_id=<span class="nb">34540359</span>,
+    msg_ids=[<span class="nb">116273301732920444</span>],
+    delete_for_all=<span class="kw">True</span>
 )</pre>
     </div>
   </div>
