@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Таблица OpCode — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .search-box {
+      width: 100%; padding: 10px 14px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      font-family: var(--font-mono); font-size: 14px;
+      margin-bottom: 20px; outline: none;
+    }
+    .search-box:focus { border-color: var(--accent); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html" class="active"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / Таблица OpCode</div>
+  <h1>🔢 Таблица OpCode</h1>
+  <p>
+    Полный справочник wire-кодов операций MAX мессенджера.
+    Источник: реверс-инжиниринг APK v26.9.0 (build 6637), файл <code>gjc.java</code>.
+  </p>
+
+  <input class="search-box" id="searchInput" placeholder="🔍 Поиск по названию или коду..." oninput="filterTable()">
+
+  <table class="opcode-table" id="opcodeTable">
+    <thead>
+      <tr><th>Константа</th><th>Opcode</th><th>Описание</th><th>Статус</th></tr>
+    </thead>
+    <tbody>
+
+      <!-- Системные -->
+      <tr class="section-row"><td colspan="4">Системные</td></tr>
+      <tr><td>PING</td><td>1</td><td>Проверка соединения</td><td></td></tr>
+      <tr><td>DEBUG</td><td>2</td><td>Отладочный пакет</td><td></td></tr>
+      <tr><td>RECONNECT</td><td>3</td><td>Переподключение к другому хосту</td><td></td></tr>
+      <tr><td>LOG</td><td>5</td><td>Лог-запись</td><td></td></tr>
+      <tr><td>SESSION_INIT</td><td>6</td><td>Инициализация сессии</td><td>✅</td></tr>
+      <tr><td>LOGOUT</td><td>20</td><td>Выход из аккаунта</td><td></td></tr>
+      <tr><td>SYNC</td><td>21</td><td>Синхронизация состояния</td><td></td></tr>
+      <tr><td>CONFIG</td><td>22</td><td>Конфигурация сервера</td><td></td></tr>
+
+      <!-- Авторизация -->
+      <tr class="section-row"><td colspan="4">Авторизация</td></tr>
+      <tr><td>PROFILE</td><td>16</td><td>Профиль пользователя. Параметр: <code>{"userId": uid}</code></td><td>✅</td></tr>
+      <tr><td>AUTH_REQUEST</td><td>17</td><td>Запрос SMS-кода (send_code)</td><td>✅</td></tr>
+      <tr><td>AUTH</td><td>18</td><td>Проверка SMS-кода (sign_in шаг 1)</td><td>✅</td></tr>
+      <tr><td>LOGIN</td><td>19</td><td>Финальный вход, кэш данных</td><td>✅</td></tr>
+      <tr><td>AUTH_CONFIRM</td><td>23</td><td>Регистрация нового аккаунта</td><td>✅</td></tr>
+      <tr><td>AUTH_LOGIN_RESTORE_PASSWORD</td><td>101</td><td>Восстановление пароля</td><td></td></tr>
+      <tr><td>AUTH_2FA_DETAILS</td><td>104</td><td>Детали 2FA</td><td></td></tr>
+      <tr><td>AUTH_VALIDATE_PASSWORD</td><td>107</td><td>Проверка пароля 2FA</td><td></td></tr>
+      <tr><td>AUTH_VALIDATE_HINT</td><td>108</td><td>Подсказка пароля</td><td></td></tr>
+      <tr><td>AUTH_VERIFY_EMAIL</td><td>109</td><td>Верификация email</td><td></td></tr>
+      <tr><td>AUTH_CHECK_EMAIL</td><td>110</td><td>Проверка email</td><td></td></tr>
+      <tr><td>AUTH_SET_2FA</td><td>111</td><td>Установка 2FA</td><td></td></tr>
+      <tr><td>AUTH_CREATE_TRACK</td><td>112</td><td>Создание трека авторизации</td><td></td></tr>
+      <tr><td>AUTH_CHECK_PASSWORD</td><td>113</td><td>Проверка пароля</td><td></td></tr>
+      <tr><td>AUTH_LOGIN_CHECK_PASSWORD</td><td>115</td><td>Вход с паролем</td><td></td></tr>
+      <tr><td>AUTH_LOGIN_PROFILE_DELETE</td><td>116</td><td>Удаление аккаунта через авторизацию</td><td></td></tr>
+
+      <!-- QR-авторизация -->
+      <tr class="section-row"><td colspan="4">QR-авторизация</td></tr>
+      <tr><td>AUTH_QR_REQUEST</td><td>288</td><td>Запрос QR-кода</td><td></td></tr>
+      <tr><td>AUTH_QR_STATUS</td><td>289</td><td>Статус QR по trackId</td><td></td></tr>
+      <tr><td>AUTH_QR_APPROVE</td><td>290</td><td>Подтверждение QR</td><td></td></tr>
+      <tr><td>AUTH_QR_LOGIN</td><td>291</td><td>Вход по QR (после сканирования)</td><td></td></tr>
+
+      <!-- Контакты -->
+      <tr class="section-row"><td colspan="4">Контакты</td></tr>
+      <tr><td>CONTACT_SORT</td><td>30</td><td>Сортировка контактов</td><td></td></tr>
+      <tr><td>SEARCH_FEEDBACK</td><td>31</td><td>Обратная связь на поиск</td><td></td></tr>
+      <tr><td>CONTACT_INFO</td><td>32</td><td>Информация о пользователе</td><td></td></tr>
+      <tr><td>CONTACT_ADD</td><td>33</td><td>Добавить в контакты</td><td></td></tr>
+      <tr><td>CONTACT_UPDATE</td><td>34</td><td>Обновить контакт</td><td></td></tr>
+      <tr><td>CONTACT_PRESENCE</td><td>35</td><td>Статус онлайн</td><td></td></tr>
+      <tr><td>CONTACT_LIST</td><td>36</td><td>Список контактов (BLOCKED/REMOVED)</td><td>✅</td></tr>
+      <tr><td>CONTACT_SEARCH</td><td>37</td><td>Поиск пользователей</td><td></td></tr>
+      <tr><td>CONTACT_MUTUAL</td><td>38</td><td>Общие контакты</td><td></td></tr>
+      <tr><td>CONTACT_PHOTOS</td><td>39</td><td>Фотографии контакта</td><td></td></tr>
+      <tr><td>CONTACT_VERIFY</td><td>42</td><td>Верификация контакта</td><td></td></tr>
+      <tr><td>REMOVE_CONTACT_PHOTO</td><td>43</td><td>Удалить фото контакта</td><td></td></tr>
+      <tr><td>CONTACT_INFO_BY_PHONE</td><td>46</td><td>Поиск по номеру телефона</td><td></td></tr>
+
+      <!-- Ассеты -->
+      <tr class="section-row"><td colspan="4">Ассеты (аватары, стикеры)</td></tr>
+      <tr><td>PRESET_AVATARS</td><td>25</td><td>Встроенные аватары</td><td></td></tr>
+      <tr><td>ASSETS_GET</td><td>26</td><td>Получить ассет</td><td></td></tr>
+      <tr><td>ASSETS_UPDATE</td><td>27</td><td>Обновить ассет</td><td></td></tr>
+      <tr><td>ASSETS_GET_BY_IDS</td><td>28</td><td>Ассеты по ID</td><td></td></tr>
+      <tr><td>ASSETS_ADD</td><td>29</td><td>Добавить ассет</td><td></td></tr>
+      <tr><td>ASSETS_REMOVE</td><td>259</td><td>Удалить ассет</td><td></td></tr>
+      <tr><td>ASSETS_MOVE</td><td>260</td><td>Переместить ассет</td><td></td></tr>
+      <tr><td>ASSETS_LIST_MODIFY</td><td>261</td><td>Изменить список ассетов</td><td></td></tr>
+
+      <!-- Чаты -->
+      <tr class="section-row"><td colspan="4">Чаты</td></tr>
+      <tr><td>CHAT_INFO</td><td>48</td><td>Информация о чате</td><td></td></tr>
+      <tr><td>CHAT_HISTORY</td><td>49</td><td>История сообщений</td><td>✅</td></tr>
+      <tr><td>CHAT_MARK</td><td>50</td><td>Пометить как прочитанное</td><td></td></tr>
+      <tr><td>CHAT_MEDIA</td><td>51</td><td>Медиа чата</td><td></td></tr>
+      <tr><td>CHAT_DELETE</td><td>52</td><td>Удалить чат</td><td></td></tr>
+      <tr><td>CHATS_LIST</td><td>53</td><td>Список чатов (delta-API)</td><td></td></tr>
+      <tr><td>CHAT_CLEAR</td><td>54</td><td>Очистить историю чата</td><td></td></tr>
+      <tr><td>CHAT_UPDATE</td><td>55</td><td>Обновить настройки чата</td><td></td></tr>
+      <tr><td>CHAT_CHECK_LINK</td><td>56</td><td>Проверить invite-ссылку</td><td></td></tr>
+      <tr><td>CHAT_JOIN</td><td>57</td><td>Вступить в чат по ссылке</td><td></td></tr>
+      <tr><td>CHAT_LEAVE</td><td>58</td><td>Покинуть чат</td><td></td></tr>
+      <tr><td>CHAT_MEMBERS</td><td>59</td><td>Список участников</td><td></td></tr>
+      <tr><td>PUBLIC_SEARCH</td><td>60</td><td>Поиск публичных чатов</td><td></td></tr>
+      <tr><td>CHAT_PERSONAL_CONFIG</td><td>61</td><td>Персональные настройки чата</td><td></td></tr>
+      <tr><td>CHAT_CREATE</td><td>63</td><td>Создать чат</td><td></td></tr>
+      <tr><td>CHAT_SEARCH</td><td>68</td><td>Поиск в чатах</td><td></td></tr>
+      <tr><td>CHAT_SUBSCRIBE</td><td>75</td><td>Подписка на чат</td><td></td></tr>
+      <tr><td>CHAT_MEMBERS_UPDATE</td><td>77</td><td>Обновление участников</td><td></td></tr>
+      <tr><td>CHAT_PIN_SET_VISIBILITY</td><td>86</td><td>Видимость закреплённых сообщений</td><td></td></tr>
+      <tr><td>CHAT_BOT_COMMANDS</td><td>144</td><td>Команды бота в чате</td><td></td></tr>
+      <tr><td>CHAT_HIDE</td><td>196</td><td>Скрыть чат</td><td></td></tr>
+      <tr><td>CHAT_SEARCH_COMMON_PARTICIPANTS</td><td>198</td><td>Общие участники</td><td></td></tr>
+      <tr><td>CHAT_REACTIONS_SETTINGS_SET</td><td>257</td><td>Настройки реакций</td><td></td></tr>
+      <tr><td>REACTIONS_SETTINGS_GET_BY_CHAT_ID</td><td>258</td><td>Получить настройки реакций</td><td></td></tr>
+
+      <!-- Сообщения -->
+      <tr class="section-row"><td colspan="4">Сообщения</td></tr>
+      <tr><td>MSG_SEND</td><td>64</td><td>Отправить сообщение</td><td>✅</td></tr>
+      <tr><td>MSG_TYPING</td><td>65</td><td>Уведомление о наборе текста</td><td></td></tr>
+      <tr><td>MSG_DELETE</td><td>66</td><td>Удалить сообщения</td><td></td></tr>
+      <tr><td>MSG_EDIT</td><td>67</td><td>Редактировать сообщение</td><td></td></tr>
+      <tr><td>MSG_SHARE_PREVIEW</td><td>70</td><td>Превью для шаринга</td><td></td></tr>
+      <tr><td>MSG_GET</td><td>71</td><td>Получить сообщение по ID</td><td></td></tr>
+      <tr><td>MSG_SEARCH_TOUCH</td><td>72</td><td>Инициализация поиска</td><td></td></tr>
+      <tr><td>MSG_SEARCH</td><td>73</td><td>Поиск по сообщениям</td><td></td></tr>
+      <tr><td>MSG_GET_STAT</td><td>74</td><td>Статистика сообщения</td><td></td></tr>
+      <tr><td>MSG_DELETE_RANGE</td><td>92</td><td>Удалить диапазон сообщений</td><td></td></tr>
+      <tr><td>CHAT_COMPLAIN</td><td>117</td><td>Жалоба на чат</td><td></td></tr>
+      <tr><td>MSG_SEND_CALLBACK</td><td>118</td><td>Callback от кнопки бота</td><td></td></tr>
+      <tr><td>SUSPEND_BOT</td><td>119</td><td>Приостановить бота</td><td></td></tr>
+      <tr><td>GET_LAST_MENTIONS</td><td>127</td><td>Последние упоминания</td><td></td></tr>
+      <tr><td>MSG_REACTION</td><td>178</td><td>Поставить реакцию</td><td></td></tr>
+      <tr><td>MSG_CANCEL_REACTION</td><td>179</td><td>Убрать реакцию</td><td></td></tr>
+      <tr><td>MSG_GET_REACTIONS</td><td>180</td><td>Список реакций</td><td></td></tr>
+      <tr><td>MSG_GET_DETAILED_REACTIONS</td><td>181</td><td>Детальные реакции</td><td></td></tr>
+      <tr><td>STICKER_CREATE</td><td>193</td><td>Создать стикер</td><td></td></tr>
+      <tr><td>STICKER_SUGGEST</td><td>194</td><td>Предложить стикер</td><td></td></tr>
+      <tr><td>VIDEO_CHAT_MEMBERS</td><td>195</td><td>Участники видеочата</td><td></td></tr>
+
+      <!-- Геолокация -->
+      <tr class="section-row"><td colspan="4">Геолокация</td></tr>
+      <tr><td>LOCATION_STOP</td><td>124</td><td>Остановить трансляцию геопозиции</td><td></td></tr>
+      <tr><td>LOCATION_SEND</td><td>125</td><td>Отправить геопозицию</td><td></td></tr>
+      <tr><td>LOCATION_REQUEST</td><td>126</td><td>Запросить геопозицию</td><td></td></tr>
+
+      <!-- Медиа -->
+      <tr class="section-row"><td colspan="4">Медиа и файлы</td></tr>
+      <tr><td>PHOTO_UPLOAD</td><td>80</td><td>Загрузить фото</td><td></td></tr>
+      <tr><td>STICKER_UPLOAD</td><td>81</td><td>Загрузить стикер</td><td></td></tr>
+      <tr><td>VIDEO_UPLOAD</td><td>82</td><td>Загрузить видео</td><td></td></tr>
+      <tr><td>VIDEO_PLAY</td><td>83</td><td>Воспроизвести видео</td><td></td></tr>
+      <tr><td>VIDEO_CHAT_CREATE_JOIN_LINK</td><td>84</td><td>Ссылка на видеозвонок</td><td></td></tr>
+      <tr><td>FILE_UPLOAD</td><td>87</td><td>Загрузить файл</td><td></td></tr>
+      <tr><td>FILE_DOWNLOAD</td><td>88</td><td>Скачать файл</td><td></td></tr>
+      <tr><td>LINK_INFO</td><td>89</td><td>Превью ссылки</td><td></td></tr>
+
+      <!-- Видеозвонки -->
+      <tr class="section-row"><td colspan="4">Видеозвонки</td></tr>
+      <tr><td>VIDEO_CHAT_START</td><td>76</td><td>Начать видеозвонок</td><td></td></tr>
+      <tr><td>VIDEO_CHAT_START_ACTIVE</td><td>78</td><td>Активный звонок</td><td></td></tr>
+      <tr><td>VIDEO_CHAT_HISTORY</td><td>79</td><td>История звонков</td><td></td></tr>
+
+      <!-- Сессии -->
+      <tr class="section-row"><td colspan="4">Сессии / безопасность</td></tr>
+      <tr><td>SESSIONS_INFO</td><td>96</td><td>Список активных сессий</td><td></td></tr>
+      <tr><td>SESSIONS_CLOSE</td><td>97</td><td>Завершить сессии</td><td></td></tr>
+      <tr><td>PHONE_BIND_REQUEST</td><td>98</td><td>Привязать номер телефона</td><td></td></tr>
+      <tr><td>PHONE_BIND_CONFIRM</td><td>99</td><td>Подтвердить номер</td><td></td></tr>
+      <tr><td>GET_INBOUND_CALLS</td><td>103</td><td>Входящие звонки</td><td></td></tr>
+      <tr><td>EXTERNAL_CALLBACK</td><td>105</td><td>Внешний callback</td><td></td></tr>
+      <tr><td>OK_TOKEN</td><td>158</td><td>OK Auth токен</td><td></td></tr>
+
+      <!-- Уведомления (входящие) -->
+      <tr class="section-row"><td colspan="4">Входящие уведомления от сервера (NOTIF)</td></tr>
+      <tr><td>NOTIF_MESSAGE</td><td>128</td><td>Новое сообщение</td><td></td></tr>
+      <tr><td>NOTIF_TYPING</td><td>129</td><td>Набирает текст</td><td></td></tr>
+      <tr><td>NOTIF_MARK</td><td>130</td><td>Прочитано</td><td></td></tr>
+      <tr><td>NOTIF_CONTACT</td><td>131</td><td>Изменение контакта</td><td></td></tr>
+      <tr><td>NOTIF_PRESENCE</td><td>132</td><td>Статус онлайн</td><td></td></tr>
+      <tr><td>NOTIF_CONFIG</td><td>134</td><td>Изменение конфига</td><td></td></tr>
+      <tr><td>NOTIF_CHAT</td><td>135</td><td>Изменение чата</td><td></td></tr>
+      <tr><td>NOTIF_ATTACH</td><td>136</td><td>Вложение обработано</td><td></td></tr>
+      <tr><td>NOTIF_CALL_START</td><td>137</td><td>Входящий звонок</td><td></td></tr>
+      <tr><td>NOTIF_CONTACT_SORT</td><td>139</td><td>Изменение сортировки</td><td></td></tr>
+      <tr><td>NOTIF_MSG_DELETE_RANGE</td><td>140</td><td>Удалён диапазон сообщений</td><td></td></tr>
+      <tr><td>NOTIF_MSG_DELETE</td><td>142</td><td>Удалено сообщение</td><td></td></tr>
+      <tr><td>NOTIF_CALLBACK_ANSWER</td><td>143</td><td>Ответ на callback</td><td></td></tr>
+      <tr><td>NOTIF_LOCATION</td><td>147</td><td>Геопозиция</td><td></td></tr>
+      <tr><td>NOTIF_LOCATION_REQUEST</td><td>148</td><td>Запрос геопозиции</td><td></td></tr>
+      <tr><td>NOTIF_ASSETS_UPDATE</td><td>150</td><td>Обновление ассетов</td><td></td></tr>
+      <tr><td>NOTIF_DRAFT</td><td>152</td><td>Черновик</td><td></td></tr>
+      <tr><td>NOTIF_DRAFT_DISCARD</td><td>153</td><td>Черновик удалён</td><td></td></tr>
+      <tr><td>NOTIF_MSG_DELAYED</td><td>154</td><td>Отложенное сообщение</td><td></td></tr>
+      <tr><td>NOTIF_MSG_REACTIONS_CHANGED</td><td>155</td><td>Реакции изменились</td><td></td></tr>
+      <tr><td>NOTIF_MSG_YOU_REACTED</td><td>156</td><td>Вы поставили реакцию</td><td></td></tr>
+      <tr><td>NOTIF_PROFILE</td><td>159</td><td>Изменение профиля</td><td></td></tr>
+      <tr><td>NOTIF_BANNERS</td><td>292</td><td>Баннеры / акции</td><td></td></tr>
+      <tr><td>NOTIF_FOLDERS</td><td>277</td><td>Изменение папок</td><td></td></tr>
+
+      <!-- Прочее -->
+      <tr class="section-row"><td colspan="4">Прочее</td></tr>
+      <tr><td>BOT_INFO</td><td>145</td><td>Информация о боте</td><td></td></tr>
+      <tr><td>DRAFT_SAVE</td><td>176</td><td>Сохранить черновик</td><td></td></tr>
+      <tr><td>DRAFT_DISCARD</td><td>177</td><td>Сбросить черновик</td><td></td></tr>
+      <tr><td>COMPLAIN</td><td>161</td><td>Жалоба</td><td></td></tr>
+      <tr><td>COMPLAIN_REASONS_GET</td><td>162</td><td>Причины жалоб</td><td></td></tr>
+      <tr><td>WEB_APP_INIT_DATA</td><td>160</td><td>Данные веб-приложения</td><td></td></tr>
+      <tr><td>PROFILE_DELETE</td><td>199</td><td>Удалить аккаунт</td><td></td></tr>
+      <tr><td>PROFILE_DELETE_TIME</td><td>200</td><td>Время удаления аккаунта</td><td></td></tr>
+
+      <!-- Папки -->
+      <tr class="section-row"><td colspan="4">Папки</td></tr>
+      <tr><td>FOLDERS_GET</td><td>272</td><td>Получить папки</td><td></td></tr>
+      <tr><td>FOLDERS_GET_BY_ID</td><td>273</td><td>Папка по ID</td><td></td></tr>
+      <tr><td>FOLDERS_UPDATE</td><td>274</td><td>Обновить папки</td><td></td></tr>
+      <tr><td>FOLDERS_REORDER</td><td>275</td><td>Изменить порядок папок</td><td></td></tr>
+      <tr><td>FOLDERS_DELETE</td><td>276</td><td>Удалить папку</td><td></td></tr>
+
+    </tbody>
+  </table>
+
+  <script>
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#opcodeTable tbody tr');
+    rows.forEach(row => {
+      if (row.classList.contains('section-row')) return;
+      const text = row.textContent.toLowerCase();
+      row.classList.toggle('hidden', q && !text.includes(q));
+    });
+  }
+  </script>
+
+</main>
+</body>
+</html>

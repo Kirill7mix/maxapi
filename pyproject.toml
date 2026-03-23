@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maxapi"
+version = "0.1.0"
+description = "MAX Messenger Client API (reverse-engineered) — аналог Telethon для MAX (ex-TamTam)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["max", "tamtam", "vk", "messenger", "api", "client", "asyncio"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Framework :: AsyncIO",
+    "Topic :: Communications :: Chat",
+]
+dependencies = [
+    "aiohttp>=3.9",
+    "msgpack>=1.0",
+    "lz4>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/YOUR_USERNAME/maxapi"
+Documentation = "https://YOUR_USERNAME.github.io/maxapi/"
+Repository = "https://github.com/YOUR_USERNAME/maxapi"
+Issues = "https://github.com/YOUR_USERNAME/maxapi/issues"
+
+[tool.setuptools.packages.find]
+include = ["maxapi*"]

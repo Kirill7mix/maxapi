@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сообщения — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html" class="active"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / Сообщения</div>
+  <h1>✉️ Сообщения</h1>
+  <p>Отправка, редактирование, удаление, реакции, уведомления о наборе.</p>
+
+  <!-- send_message -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>send_message(chat_id, text, reply_to=None)</code>
+      <span class="method-opcode">MSG_SEND · opcode 64</span>
+    </div>
+    <div class="method-body">
+      <p>Отправляет текстовое сообщение. Подтверждено в бою ✅</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата (из списка чатов)</td></tr>
+          <tr><td><code>text</code></td><td class="type">str</td><td>Текст сообщения</td></tr>
+          <tr><td><code>reply_to</code></td><td class="type">int</td><td class="optional">Необязательно. ID сообщения для ответа (цитата)</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> с полями:
+        <code>chatId</code>, <code>message</code> (полный объект), <code>unread</code>, <code>mark</code></div>
+
+      <h3>Структура wire-запроса</h3>
+      <p>Сервер ожидает вложенный объект <code>message</code>, а не плоские параметры:</p>
+      <pre>{
+  <span class="st">"chatId"</span>: <span class="nb">34540359</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"cid"</span>:         <span class="nb">1774194113898</span>,   <span class="cm"># уникальный client ID = int(time.time()*1000)</span>
+    <span class="st">"text"</span>:        <span class="st">"Привет!"</span>,
+    <span class="st">"detectShare"</span>: <span class="nb">false</span>,
+    <span class="st">"isLive"</span>:      <span class="nb">false</span>
+  }
+}</pre>
+      <div class="warn"><span class="icon">⚠️</span><div>
+        <code>cid</code> — клиентский ID для дедупликации. Если передавать одно и то же значение
+        (например <code>chatId</code>), сервер вернёт старое сообщение не отправляя новое.
+        Библиотека использует <code>int(time.time() * 1000)</code> — уникальный на каждый вызов.
+      </div></div>
+
+  <!-- send_photo -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>send_photo(chat_id, image, caption="", reply_to=None)</code>
+      <span class="method-opcode">PHOTO_UPLOAD + MSG_SEND · opcode 80/64</span>
+    </div>
+    <div class="method-body">
+      <p>Загружает изображение на сервер и отправляет его в чат. Двухшаговый процесс: сначала получает одноразовый URL загрузки (opcode 80), потом делает HTTP&nbsp;multipart POST, и наконец отправляет MSG_SEND со вложением. Подтверждено в бою ✅</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>image</code></td><td class="type">str | bytes</td><td>Путь к файлу или байты изображения (JPEG/PNG)</td></tr>
+          <tr><td><code>caption</code></td><td class="type">str</td><td class="optional">Необязательно. Подпись под фото</td></tr>
+          <tr><td><code>reply_to</code></td><td class="type">int</td><td class="optional">Необязательно. ID сообщения для ответа</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> — полный ответ MSG_SEND с прикреплённым объектом фото</div>
+
+      <h3>Протокол загрузки (два шага)</h3>
+      <p><strong>Шаг 1</strong> — запрос одноразового URL (opcode 80 <code>PHOTO_UPLOAD</code>):</p>
+      <pre><span class="cm"># Запрос</span>
+{ <span class="st">"chatId"</span>: <span class="nb">55474168</span>, <span class="st">"count"</span>: <span class="nb">1</span> }
+
+<span class="cm"># Ответ сервера</span>
+{
+  <span class="st">"url"</span>: <span class="st">"https://iu.oneme.ru/uploadImage?X-Amz-Algorithm=..."</span>,
+  <span class="st">"photoIds"</span>: <span class="st">"8361541005"</span>
+}</pre>
+      <p><strong>Шаг 2</strong> — HTTP multipart POST на полученный URL:</p>
+      <pre><span class="cm"># Content-Type: multipart/form-data</span>
+<span class="cm"># поле: file = &lt;байты JPEG&gt;, filename=photo.jpg, content_type=image/jpeg</span>
+
+<span class="cm"># Ответ</span>
+{
+  <span class="st">"photos"</span>: {
+    <span class="st">"8361541005"</span>: { <span class="st">"token"</span>: <span class="st">"bso0sDwO...=="</span> }
+  }
+}</pre>
+      <p><strong>Шаг 3</strong> — MSG_SEND с <code>attaches</code>:</p>
+      <pre>{
+  <span class="st">"chatId"</span>: <span class="nb">55474168</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"cid"</span>: <span class="nb">1774199151982</span>,
+    <span class="st">"text"</span>: <span class="st">"Привет от MAX"</span>,
+    <span class="st">"detectShare"</span>: <span class="nb">false</span>,
+    <span class="st">"isLive"</span>: <span class="nb">false</span>,
+    <span class="st">"attaches"</span>: [
+      { <span class="st">"_type"</span>: <span class="st">"PHOTO"</span>, <span class="st">"photoToken"</span>: <span class="st">"bso0sDwO...=="</span> }
+    ],
+    <span class="st">"link"</span>: { <span class="st">"type"</span>: <span class="st">"REPLY"</span>, <span class="st">"messageId"</span>: <span class="nb">116273915609219087</span> }
+  }
+}</pre>
+      <div class="warn"><span class="icon">⚠️</span><div>
+        Ключ вложения — <code>"_type": "PHOTO"</code> (с подчёркиванием), а токен передаётся как <code>"photoToken"</code>.
+        Поля <code>"type"</code> (без подчёркивания) или <code>"token"</code> сервер не принимает и возвращает
+        <code>Invalid attachment _type: null</code>.
+      </div></div>
+
+      <h3>Ответ сервера (MSG_SEND)</h3>
+      <pre>{
+  <span class="st">"chatId"</span>: <span class="nb">55474168</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"id"</span>: <span class="nb">116273915651779748</span>,
+    <span class="st">"time"</span>: <span class="nb">1774199152401</span>,
+    <span class="st">"type"</span>: <span class="st">"USER"</span>,
+    <span class="st">"sender"</span>: <span class="nb">61091213</span>,
+    <span class="st">"text"</span>: <span class="st">"Привет от MAX"</span>,
+    <span class="st">"attaches"</span>: [
+      {
+        <span class="st">"_type"</span>: <span class="st">"PHOTO"</span>,
+        <span class="st">"photoId"</span>: <span class="nb">8361541005</span>,
+        <span class="st">"photoToken"</span>: <span class="st">"bso0sDwO...=="</span>,
+        <span class="st">"baseUrl"</span>: <span class="st">"https://i.oneme.ru/i?r=BTExG6..."</span>,
+        <span class="st">"width"</span>: <span class="nb">1</span>,
+        <span class="st">"height"</span>: <span class="nb">1</span>
+      }
+    ],
+    <span class="st">"link"</span>: {
+      <span class="st">"type"</span>: <span class="st">"REPLY"</span>,
+      <span class="st">"message"</span>: { <span class="st">"id"</span>: <span class="nb">116273915609219087</span>, <span class="st">"text"</span>: <span class="st">"Привет"</span>, <span class="cm">/* ... */</span> },
+      <span class="st">"chatId"</span>: <span class="nb">0</span>
+    }
+  },
+  <span class="st">"unread"</span>: <span class="nb">0</span>
+}</pre>
+
+      <h3>Пример — юзербот: отвечаем картинкой на любое сообщение</h3>
+      <pre><span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient, Message
+
+client = MaxClient(<span class="st">"my_session"</span>)
+
+<span class="at">@client.on_message</span>
+<span class="kw">async def</span> <span class="fn">on_message</span>(msg: Message):
+    <span class="kw">if</span> msg.is_outgoing:
+        <span class="kw">return</span>
+    <span class="kw">await</span> client.<span class="fn">send_photo</span>(
+        msg.chat_id,
+        <span class="st">"banner.jpg"</span>,
+        caption=<span class="st">"Привет!"</span>,
+        reply_to=msg.id,
+    )</pre>
+    </div>
+  </div>
+
+  <!-- upload_photo -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>upload_photo(chat_id, image_data)</code>
+      <span class="method-opcode">PHOTO_UPLOAD + HTTP · opcode 80</span>
+    </div>
+    <div class="method-body">
+      <p>Нижнеуровневый метод: загружает байты изображения и возвращает <code>photoToken</code> — строку, пригодную для вставки в <code>attaches</code> вручную. Используется внутри <code>send_photo()</code>, но может вызываться напрямую.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата (используется при получении URL загрузки)</td></tr>
+          <tr><td><code>image_data</code></td><td class="type">bytes</td><td>Байты JPEG или PNG изображения</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ str</strong> — base64-токен фото (<code>photoToken</code>)</div>
+      <pre><span class="kw">with</span> <span class="fn">open</span>(<span class="st">"photo.jpg"</span>, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+    data = f.<span class="fn">read</span>()
+
+token = <span class="kw">await</span> client.<span class="fn">upload_photo</span>(chat_id=<span class="nb">55474168</span>, image_data=data)
+
+<span class="cm"># Вставить токен вручную в attaches</span>
+<span class="kw">await</span> client.<span class="fn">send_message</span>(
+    chat_id=<span class="nb">55474168</span>,
+    text=<span class="st">"Смотри:"</span>,
+    attaches=[{ <span class="st">"_type"</span>: <span class="st">"PHOTO"</span>, <span class="st">"photoToken"</span>: token }],
+)</pre>
+    </div>
+  </div>
+
+      <p>Для ответа (reply) добавляется поле <code>link</code>:</p>
+      <pre>{
+  <span class="st">"chatId"</span>: <span class="nb">34540359</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"cid"</span>:  <span class="nb">1774194901424</span>,  <span class="cm"># int(time.time()*1000)</span>
+    <span class="st">"text"</span>: <span class="st">"Ответ на твоё сообщение"</span>,
+    <span class="st">"detectShare"</span>: <span class="nb">false</span>,
+    <span class="st">"isLive"</span>: <span class="nb">false</span>,
+    <span class="st">"link"</span>: { <span class="st">"type"</span>: <span class="st">"REPLY"</span>, <span class="st">"messageId"</span>: <span class="nb">116273064558352190</span> }
+  }
+}</pre>
+
+      <h3>Пример</h3>
+      <pre><span class="cm"># Обычное сообщение</span>
+result = <span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id=<span class="nb">34540359</span>, text=<span class="st">"Тест"</span>)
+msg_id = result[<span class="st">"message"</span>][<span class="st">"id"</span>]
+
+<span class="cm"># Ответ (цитата)</span>
+<span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id=<span class="nb">34540359</span>, text=<span class="st">"Ответ!"</span>, reply_to=msg_id)</pre>
+
+      <h3>Ответ сервера</h3>
+      <pre>{
+  <span class="st">"chatId"</span>: <span class="nb">34540359</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"id"</span>:      <span class="nb">116273301732920444</span>,  <span class="cm"># назначенный id</span>
+    <span class="st">"time"</span>:    <span class="nb">1774189784743</span>,       <span class="cm"># Unix ms</span>
+    <span class="st">"type"</span>:    <span class="st">"USER"</span>,
+    <span class="st">"sender"</span>:  <span class="nb">61091213</span>,
+    <span class="st">"cid"</span>:     <span class="nb">34540359</span>,
+    <span class="st">"text"</span>:    <span class="st">"Тест"</span>,
+    <span class="st">"attaches"</span>: []
+  },
+  <span class="st">"unread"</span>: <span class="nb">0</span>,
+  <span class="st">"mark"</span>:   <span class="nb">1774189784743</span>
+}</pre>
+    </div>
+  </div>
+
+  <!-- edit_message -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>edit_message(chat_id, msg_id, text)</code>
+      <span class="method-opcode">MSG_EDIT · opcode 67</span>
+    </div>
+    <div class="method-body">
+      <p>Редактирует текст уже отправленного сообщения.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>msg_id</code></td><td class="type">int</td><td>ID сообщения</td></tr>
+          <tr><td><code>text</code></td><td class="type">str</td><td>Новый текст</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong></div>
+      <pre><span class="kw">await</span> client.<span class="fn">edit_message</span>(
+    chat_id=<span class="nb">34540359</span>,
+    msg_id=<span class="nb">116273301732920444</span>,
+    text=<span class="st">"Исправленный текст"</span>
+)</pre>
+    </div>
+  </div>
+
+  <!-- delete_messages -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>delete_messages(chat_id, msg_ids)</code>
+      <span class="method-opcode">MSG_DELETE · opcode 66</span>
+    </div>
+    <div class="method-body">
+      <p>Удаляет одно или несколько сообщений.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>msg_ids</code></td><td class="type">list[int]</td><td>Список ID сообщений</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong></div>
+      <pre><span class="kw">await</span> client.<span class="fn">delete_messages</span>(
+    chat_id=<span class="nb">34540359</span>,
+    msg_ids=[<span class="nb">116273301732920444</span>, <span class="nb">116273301732920445</span>]
+)</pre>
+    </div>
+  </div>
+
+  <!-- send_typing -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>send_typing(chat_id)</code>
+      <span class="method-opcode">MSG_TYPING · opcode 65</span>
+    </div>
+    <div class="method-body">
+      <p>Отправляет уведомление «печатает…». Запрос без ожидания ответа (<code>wait_response=False</code>).</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td></tr>
+        </tbody>
+      </table>
+      <pre><span class="kw">await</span> client.<span class="fn">send_typing</span>(chat_id=<span class="nb">34540359</span>)</pre>
+    </div>
+  </div>
+
+  <!-- mark_read -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>mark_read(chat_id, msg_id)</code>
+      <span class="method-opcode">CHAT_MARK · opcode 50</span>
+    </div>
+    <div class="method-body">
+      <p>Помечает сообщения как прочитанные (до указанного ID включительно).</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>msg_id</code></td><td class="type">int</td><td>ID последнего прочитанного сообщения</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong></div>
+    </div>
+  </div>
+
+  <!-- react -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>react(chat_id, msg_id, reaction)</code>
+      <span class="method-opcode">MSG_REACTION · opcode 178</span>
+    </div>
+    <div class="method-body">
+      <p>Ставит реакцию на сообщение.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>msg_id</code></td><td class="type">int</td><td>ID сообщения</td></tr>
+          <tr><td><code>reaction</code></td><td class="type">str</td><td>Эмодзи или код реакции, например <code>"👍"</code></td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong></div>
+    </div>
+  </div>
+
+  <!-- get_link_info -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_link_info(url)</code>
+      <span class="method-opcode">LINK_INFO · opcode 89</span>
+    </div>
+    <div class="method-body">
+      <p>Получает превью ссылки (title, description, thumbnail).</p>
+      <div class="returns"><strong>→ dict</strong></div>
+      <pre>info = <span class="kw">await</span> client.<span class="fn">get_link_info</span>(<span class="st">"https://example.com"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- Уведомления -->
+  <h2>📡 Входящие уведомления (NOTIF)</h2>
+  <p>Сервер присылает push-уведомления без запроса. Коды из <code>OpCode</code>:</p>
+  <table class="opcode-table">
+    <thead><tr><th>Константа</th><th>Opcode</th><th>Событие</th></tr></thead>
+    <tbody>
+      <tr><td>NOTIF_MESSAGE</td><td>128</td><td>Новое входящее сообщение</td></tr>
+      <tr><td>NOTIF_TYPING</td><td>129</td><td>Собеседник набирает текст</td></tr>
+      <tr><td>NOTIF_MARK</td><td>130</td><td>Собеседник прочитал сообщения</td></tr>
+      <tr><td>NOTIF_MSG_DELETE</td><td>142</td><td>Сообщение удалено</td></tr>
+      <tr><td>NOTIF_MSG_DELETE_RANGE</td><td>140</td><td>Удалён диапазон сообщений</td></tr>
+      <tr><td>NOTIF_MSG_REACTIONS_CHANGED</td><td>155</td><td>Реакции изменились</td></tr>
+      <tr><td>NOTIF_MSG_YOU_REACTED</td><td>156</td><td>Реакция поставлена</td></tr>
+      <tr><td>NOTIF_DRAFT</td><td>152</td><td>Черновик сохранён</td></tr>
+      <tr><td>NOTIF_DRAFT_DISCARD</td><td>153</td><td>Черновик сброшен</td></tr>
+      <tr><td>NOTIF_MSG_DELAYED</td><td>154</td><td>Отложенное сообщение</td></tr>
+      <tr><td>NOTIF_CALLBACK_ANSWER</td><td>143</td><td>Ответ на callback (боты)</td></tr>
+    </tbody>
+  </table>
+
+</main>
+</body>
+</html>

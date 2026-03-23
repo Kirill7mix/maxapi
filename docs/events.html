@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>События — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html" class="active"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / События</div>
+  <h1>⚡ События (Push-уведомления)</h1>
+  <p>
+    Сервер MAX поддерживает постоянное TCP-соединение и сам толкает пакеты при новых событиях
+    (входящие сообщения, статусы, уведомления о наборе и т.д.). Никакого polling'а не нужно.
+  </p>
+
+  <div class="tip" style="background:#1a2a3a;border-left:4px solid var(--accent);padding:10px 14px;border-radius:4px;margin:16px 0;">
+    <strong style="color:var(--accent)">✅ Подтверждено в бою</strong> — события приходят мгновенно,
+    push-архитектура работает. Opcode push-пакетов всегда ≥ 128.
+  </div>
+
+  <!-- Архитектура -->
+  <h2>Как это работает</h2>
+  <ol style="line-height:2">
+    <li>Клиент подключается и логинится — <code>await client.connect()</code></li>
+    <li>Регистрируются обработчики через декораторы <code>@client.on_message</code> / <code>@client.on(opcode)</code></li>
+    <li>Вызывается <code>await client.run_until_disconnected()</code> — блокирует и слушает</li>
+    <li>При входящем пакете библиотека строит типизированный объект и вызывает обработчик в отдельной задаче</li>
+  </ol>
+
+  <div class="warn">
+    <span class="icon">⚠️</span>
+    <div>
+      Каждый обработчик запускается через <code>asyncio.create_task()</code>.
+      Это позволяет делать <code>await</code> внутри хендлера (например <code>await msg.reply()</code>)
+      не блокируя чтение следующих пакетов.
+    </div>
+  </div>
+
+  <h2>Базовый шаблон юзербота</h2>
+  <pre><span class="kw">import</span> asyncio
+<span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient, Message
+
+client = MaxClient(<span class="st">"my_session"</span>)
+
+<span class="nd">@client.on_message</span>
+<span class="kw">async def</span> <span class="fn">handler</span>(msg: Message):
+    <span class="kw">if not</span> msg.is_outgoing:
+        <span class="kw">await</span> msg.<span class="fn">reply</span>(<span class="st">"Привет от MAX API!"</span>)
+
+asyncio.<span class="fn">run</span>(client.<span class="fn">start</span>())  <span class="cm"># connect + run_until_disconnected</span></pre>
+
+  <!-- on_message -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge" style="background:#2a3a2a;color:#4caf50;border:1px solid #4caf50">decorator</span>
+      <code>@client.on_message</code>
+      <span class="method-opcode">NOTIF_MESSAGE · opcode 128</span>
+    </div>
+    <div class="method-body">
+      <p>
+        Декоратор для обработки входящих и исходящих сообщений.
+        Передаёт объект <code>Message</code> с удобными полями.
+      </p>
+      <pre><span class="nd">@client.on_message</span>
+<span class="kw">async def</span> <span class="fn">on_msg</span>(msg: Message):
+    <span class="kw">if</span> msg.is_outgoing:
+        <span class="kw">return</span>  <span class="cm"># игнорируем собственные</span>
+    print(f<span class="st">"Новое от {msg.sender_id}: {msg.text}"</span>)
+    <span class="kw">await</span> msg.<span class="fn">reply</span>(<span class="st">"Получено!"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- on(opcode) -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge" style="background:#2a3a2a;color:#4caf50;border:1px solid #4caf50">decorator</span>
+      <code>@client.on(opcode)</code>
+      <span class="method-opcode">любой NOTIF_* opcode</span>
+    </div>
+    <div class="method-body">
+      <p>
+        Универсальный декоратор — регистрирует обработчик для любого opcode.
+        Для NOTIF_TYPING передаёт объект <code>TypingEvent</code>, для остальных — сырой <code>dict</code>.
+      </p>
+      <pre><span class="kw">from</span> maxapi <span class="kw">import</span> OpCode
+<span class="kw">from</span> maxapi.types <span class="kw">import</span> TypingEvent
+
+<span class="nd">@client.on</span>(OpCode.NOTIF_TYPING)
+<span class="kw">async def</span> <span class="fn">on_typing</span>(event: TypingEvent):
+    print(f<span class="st">"Печатает: {event.sender_id} в чате {event.chat_id}"</span>)
+
+<span class="nd">@client.on</span>(OpCode.NOTIF_PRESENCE)
+<span class="kw">async def</span> <span class="fn">on_presence</span>(event: dict):
+    print(event)</pre>
+
+      <h3>Можно вешать несколько хендлеров на один opcode</h3>
+      <pre><span class="nd">@client.on_message</span>
+<span class="kw">async def</span> <span class="fn">logger</span>(msg): print(msg)
+
+<span class="nd">@client.on_message</span>
+<span class="kw">async def</span> <span class="fn">responder</span>(msg):
+    <span class="kw">if not</span> msg.is_outgoing:
+        <span class="kw">await</span> msg.<span class="fn">reply</span>(<span class="st">"Авто-ответ"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- run_until_disconnected -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>run_until_disconnected()</code>
+      <span class="method-opcode">блокирует до разрыва</span>
+    </div>
+    <div class="method-body">
+      <p>Блокирует выполнение до тех пор, пока не оборвётся соединение или не будет вызван <code>Ctrl+C</code>.</p>
+      <pre><span class="kw">await</span> client.<span class="fn">connect</span>()
+<span class="kw">await</span> client.<span class="fn">run_until_disconnected</span>()</pre>
+    </div>
+  </div>
+
+  <!-- Message class -->
+  <h2 style="margin-top:36px">Класс <code>Message</code></h2>
+  <p>Объект передаваемый в <code>@on_message</code> хендлер.</p>
+
+  <table class="params-table">
+    <thead><tr><th>Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><code>id</code></td><td class="type">int</td><td>Уникальный ID сообщения (назначает сервер)</td></tr>
+      <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+      <tr><td><code>sender_id</code></td><td class="type">int</td><td>UID отправителя</td></tr>
+      <tr><td><code>text</code></td><td class="type">str</td><td>Текст сообщения</td></tr>
+      <tr><td><code>time_ms</code></td><td class="type">int</td><td>Время отправки (Unix, миллисекунды)</td></tr>
+      <tr><td><code>is_outgoing</code></td><td class="type">bool</td><td>True — если сообщение отправили мы</td></tr>
+      <tr><td><code>raw</code></td><td class="type">dict</td><td>Полный dict из сервера (params пакета)</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:16px">Методы</h3>
+  <table class="params-table">
+    <thead><tr><th>Метод</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>await msg.reply(text)</code></td>
+        <td>Ответить в тот же чат. Аналог <code>await client.send_message(msg.chat_id, text)</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TypingEvent class -->
+  <h2 style="margin-top:36px">Класс <code>TypingEvent</code></h2>
+  <p>Объект передаваемый в <code>@client.on(OpCode.NOTIF_TYPING)</code> хендлер.</p>
+
+  <table class="params-table">
+    <thead><tr><th>Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата, в котором печатают</td></tr>
+      <tr><td><code>sender_id</code></td><td class="type">int</td><td>UID пользователя, который печатает</td></tr>
+      <tr><td><code>raw</code></td><td class="type">dict</td><td>Полный dict из сервера</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Таблица push-опкодов -->
+  <h2 style="margin-top:36px">Push-опкоды сервера</h2>
+  <p>Все входящие уведомления имеют opcode ≥ 128 и никогда не являются ответами на наши запросы.</p>
+
+  <table class="params-table">
+    <thead><tr><th>OpCode</th><th>Константа</th><th>Описание</th><th>Объект</th></tr></thead>
+    <tbody>
+      <tr><td><code>128</code></td><td><code>NOTIF_MESSAGE</code></td><td>Новое / обновлённое сообщение ✅</td><td><code>Message</code></td></tr>
+      <tr><td><code>129</code></td><td><code>NOTIF_TYPING</code></td><td>Пользователь печатает ✅</td><td><code>TypingEvent</code></td></tr>
+      <tr><td><code>130</code></td><td><code>NOTIF_MARK</code></td><td>Сообщения прочитаны</td><td><code>dict</code></td></tr>
+      <tr><td><code>131</code></td><td><code>NOTIF_CONTACT</code></td><td>Изменение контакта</td><td><code>dict</code></td></tr>
+      <tr><td><code>132</code></td><td><code>NOTIF_PRESENCE</code></td><td>Статус онлайн/оффлайн</td><td><code>dict</code></td></tr>
+      <tr><td><code>134</code></td><td><code>NOTIF_CONFIG</code></td><td>Обновление конфигурации</td><td><code>dict</code></td></tr>
+      <tr><td><code>135</code></td><td><code>NOTIF_CHAT</code></td><td>Изменение чата</td><td><code>dict</code></td></tr>
+      <tr><td><code>136</code></td><td><code>NOTIF_ATTACH</code></td><td>Новое вложение</td><td><code>dict</code></td></tr>
+      <tr><td><code>137</code></td><td><code>NOTIF_CALL_START</code></td><td>Входящий звонок</td><td><code>dict</code></td></tr>
+      <tr><td><code>142</code></td><td><code>NOTIF_MSG_DELETE</code></td><td>Удаление сообщения</td><td><code>dict</code></td></tr>
+      <tr><td><code>152</code></td><td><code>NOTIF_DRAFT</code></td><td>Черновик сохранён</td><td><code>dict</code></td></tr>
+      <tr><td><code>155</code></td><td><code>NOTIF_MSG_REACTIONS_CHANGED</code></td><td>Реакции изменились</td><td><code>dict</code></td></tr>
+      <tr><td><code>292</code></td><td><code>NOTIF_BANNERS</code></td><td>Баннеры/рекламные уведомления</td><td><code>dict</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Wire формат -->
+  <h2 style="margin-top:36px">Wire-формат NOTIF_MESSAGE (opcode 128)</h2>
+  <p>Пример реального пакета, пойманного во время теста:</p>
+  <pre>{
+  <span class="st">"chatId"</span>:        <span class="nb">63530148</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"id"</span>:      <span class="nb">116273637059727804</span>,
+    <span class="st">"time"</span>:    <span class="nb">1774194113898</span>,
+    <span class="st">"type"</span>:    <span class="st">"USER"</span>,
+    <span class="st">"sender"</span>:  <span class="nb">7162153</span>,
+    <span class="st">"cid"</span>:     <span class="nb">567919839690875</span>,
+    <span class="st">"text"</span>:    <span class="st">"Привет!"</span>,
+    <span class="st">"attaches"</span>: []
+  },
+  <span class="st">"prevMessageId"</span>: <span class="nb">116273584104764698</span>,
+  <span class="st">"ttl"</span>:           <span class="nb">false</span>,
+  <span class="st">"unread"</span>:        <span class="nb">0</span>,
+  <span class="st">"mark"</span>:          <span class="nb">1774194113898</span>
+}</pre>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Авторизация — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html" class="active"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / Авторизация</div>
+  <h1>🔑 Авторизация</h1>
+  <p>Все способы входа в MAX: SMS-код, сохранённый токен, регистрация нового аккаунта.</p>
+
+  <h2>Методы клиента</h2>
+
+  <!-- connect -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>connect()</code>
+      <span class="method-opcode">SESSION_INIT · opcode 6</span>
+    </div>
+    <div class="method-body">
+      <p>Устанавливает TCP/SSL соединение с <code>api.oneme.ru:443</code> и инициализирует сессию.
+      Если в файле сессии уже есть <code>auth_token</code> — автоматически выполняет <code>LOGIN</code> (opcode 19),
+      загружая профиль, чаты и контакты в кэш.</p>
+      <div class="warn">
+        <span class="icon">⚠️</span>
+        <div>Необходимо вызвать перед любыми другими методами. При использовании <code>async with</code> вызывается автоматически.</div>
+      </div>
+      <pre><span class="kw">await</span> client.<span class="fn">connect</span>()</pre>
+    </div>
+  </div>
+
+  <!-- disconnect -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>disconnect()</code>
+    </div>
+    <div class="method-body">
+      <p>Закрывает TCP-соединение. При использовании <code>async with</code> вызывается автоматически.</p>
+      <pre><span class="kw">await</span> client.<span class="fn">disconnect</span>()</pre>
+    </div>
+  </div>
+
+  <!-- send_code -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>send_code(phone)</code>
+      <span class="method-opcode">AUTH_REQUEST · opcode 17</span>
+    </div>
+    <div class="method-body">
+      <p>Отправляет запрос на SMS-код. Аналог <code>dg0.java → AUTH_REQUEST + type=START_AUTH</code>.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>phone</code></td><td class="type">str</td><td>Номер в формате <code>"+79001234567"</code></td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ SentCode</strong> — объект с <code>code_length</code>, <code>verify_token</code>, <code>alt_action_duration</code></div>
+      <pre>sent = <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79001234567"</span>)
+print(<span class="st">f"Ожидается {sent.code_length}-значный код"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- resend_code -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>resend_code()</code>
+      <span class="method-opcode">AUTH_REQUEST · opcode 17 (type=RESEND)</span>
+    </div>
+    <div class="method-body">
+      <p>Повторная отправка SMS. Требует предварительного вызова <code>send_code()</code>.</p>
+      <div class="returns"><strong>→ SentCode</strong></div>
+    </div>
+  </div>
+
+  <!-- sign_in -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>sign_in(code)</code>
+      <span class="method-opcode">AUTH 18 → LOGIN 19</span>
+    </div>
+    <div class="method-body">
+      <p>Проверяет SMS-код и выполняет вход. Внутри: два шага —</p>
+      <ol style="margin:8px 0 12px 20px;">
+        <li><strong>AUTH (opcode 18)</strong> — передаёт <code>verifyCode</code>, получает LOGIN-токен</li>
+        <li><strong>LOGIN (opcode 19)</strong> — финальный вход, загружает профиль + чаты в кэш</li>
+      </ol>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>code</code></td><td class="type">str</td><td>Код из SMS</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ AuthResult</strong>
+        — <code>.success</code> (bool),
+          <code>.uid</code> (int),
+          <code>.auth_token</code> (str),
+          <code>.needs_registration</code> (bool),
+          <code>.register_token</code> (str)</div>
+      <pre>result = <span class="kw">await</span> client.<span class="fn">sign_in</span>(<span class="st">"123456"</span>)
+<span class="kw">if</span> result.success:
+    print(<span class="st">f"UID = {result.uid}"</span>)
+<span class="kw">elif</span> result.needs_registration:
+    result = <span class="kw">await</span> client.<span class="fn">sign_up</span>(<span class="st">"Иван"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- sign_up -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>sign_up(first_name, last_name="", register_token=None)</code>
+      <span class="method-opcode">AUTH_CONFIRM · opcode 23</span>
+    </div>
+    <div class="method-body">
+      <p>Регистрирует новый аккаунт. Вызывается когда <code>sign_in()</code> вернул <code>needs_registration=True</code>.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>first_name</code></td><td class="type">str</td><td>Имя</td></tr>
+          <tr><td><code>last_name</code></td><td class="type">str</td><td class="optional">Необязательно. Фамилия</td></tr>
+          <tr><td><code>register_token</code></td><td class="type">str</td><td class="optional">Необязательно. Токен из sign_in()</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ AuthResult</strong></div>
+    </div>
+  </div>
+
+  <!-- login_with_token -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>login_with_token(auth_token)</code>
+      <span class="method-opcode">LOGIN · opcode 19</span>
+    </div>
+    <div class="method-body">
+      <p>Быстрый вход по已 имеющемуся <code>auth_token</code> в обход SMS. Используется при автоматическом восстановлении сессии.</p>
+      <div class="returns"><strong>→ AuthResult</strong></div>
+    </div>
+  </div>
+
+  <!-- Properties -->
+  <h2>Свойства после входа</h2>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-prop">property</span>
+      <code>client.uid</code>
+    </div>
+    <div class="method-body">
+      <p>UID текущего пользователя (int). Берётся из <code>profile.contact.id</code> LOGIN-ответа.</p>
+      <pre>print(client.uid)  <span class="cm"># 61091213</span></pre>
+    </div>
+  </div>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-prop">property</span>
+      <code>client.me</code>
+    </div>
+    <div class="method-body">
+      <p>Словарь с профилем текущего пользователя. Загружается один раз при LOGIN.</p>
+      <table class="params-table">
+        <thead><tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td class="type">int</td><td>UID</td></tr>
+          <tr><td><code>name</code></td><td class="type">str</td><td>Полное имя</td></tr>
+          <tr><td><code>first_name</code></td><td class="type">str</td><td>Имя</td></tr>
+          <tr><td><code>last_name</code></td><td class="type">str</td><td>Фамилия</td></tr>
+          <tr><td><code>phone</code></td><td class="type">str</td><td>Номер телефона</td></tr>
+          <tr><td><code>country</code></td><td class="type">str</td><td>Код страны</td></tr>
+          <tr><td><code>account_status</code></td><td class="type">int</td><td>Статус аккаунта</td></tr>
+        </tbody>
+      </table>
+      <pre>me = client.me
+print(<span class="st">f"{me['name']} ({me['phone']})"</span>)</pre>
+    </div>
+  </div>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-prop">property</span>
+      <code>client.is_authorized</code>
+    </div>
+    <div class="method-body">
+      <p>Возвращает <code>True</code> если в сессии есть <code>auth_token</code>.</p>
+    </div>
+  </div>
+
+  <!-- Session file -->
+  <h2>Файл сессии</h2>
+  <p>Сессия хранится в JSON-файле. Пример содержимого <code>my_session.json</code>:</p>
+  <pre>{
+  <span class="st">"uid"</span>:        <span class="nb">61091213</span>,
+  <span class="st">"phone"</span>:      <span class="st">"+79001234567"</span>,
+  <span class="st">"auth_token"</span>: <span class="st">"eyJhbGciOiJIUzI1NiJ9..."</span>,
+  <span class="st">"proxy_host"</span>: <span class="st">"api.oneme.ru"</span>
+}</pre>
+  <div class="tip">
+    <span class="icon">💡</span>
+    <div>Передавайте разные имена файлов для разных аккаунтов: <code>MaxClient("account1")</code>, <code>MaxClient("account2")</code>.</div>
+  </div>
+
+  <!-- get_profile -->
+  <h2>get_profile() / fetch_profile()</h2>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-sync">sync</span>
+      <code>get_profile()</code>
+    </div>
+    <div class="method-body">
+      <p>Возвращает профиль из <strong>кэша</strong> (из LOGIN-ответа). Мгновенно, без сетевого запроса.</p>
+      <div class="returns"><strong>→ dict</strong> (то же что <code>client.me</code>)</div>
+      <pre>profile = client.get_profile()
+print(profile[<span class="st">"name"</span>])</pre>
+    </div>
+  </div>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>fetch_profile(user_id=None)</code>
+      <span class="method-opcode">PROFILE &middot; opcode 16</span>
+    </div>
+    <div class="method-body">
+      <p>Запрашивает <strong>свежий</strong> профиль с сервера. Обновляет внутренний кэш.</p>
+      <div class="tip">
+        <span class="icon">✅</span>
+        <div>Работает корректно. Wire-параметр: <code>{"userId": uid}</code>.
+        Ключ <code>uid</code> (без <em>er</em>) вызывает дисконнект на стороне сервера &mdash; использовать только <code>userId</code>.</div>
+      </div>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>user_id</code></td><td class="type">int</td><td class="optional">Необязательно. UID пользователя. По умолчанию &mdash; текущий.</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> &mdash; сырой объект <code>contact</code> с сервера.
+        Также обновляет <code>client.me</code> если запрашивали себя.</div>
+      <h3>Структура ответа сервера</h3>
+      <pre>{
+  <span class="st">"id"</span>:            <span class="nb">61091213</span>,
+  <span class="st">"updateTime"</span>:    <span class="nb">1774189702185</span>,
+  <span class="st">"phone"</span>:         <span class="nb">79678082930</span>,
+  <span class="st">"names"</span>: [{
+    <span class="st">"name"</span>:        <span class="st">"Телеграм"</span>,
+    <span class="st">"firstName"</span>:  <span class="st">"Телеграм"</span>,
+    <span class="st">"lastName"</span>:   <span class="st">""</span>,
+    <span class="st">"type"</span>:       <span class="st">"ONEME"</span>
+  }],
+  <span class="st">"options"</span>:       [<span class="st">"TT"</span>, <span class="st">"ONEME"</span>],
+  <span class="st">"accountStatus"</span>: <span class="nb">0</span>,
+  <span class="st">"country"</span>:       <span class="st">""</span>
+}</pre>
+      <h3>Пример</h3>
+      <pre><span class="cm"># Свой профиль</span>
+contact = <span class="kw">await</span> client.<span class="fn">fetch_profile</span>()
+print(contact[<span class="st">"names"</span>][<span class="nb">0</span>][<span class="st">"name"</span>])
+
+<span class="cm"># Профиль другого пользователя</span>
+contact = <span class="kw">await</span> client.<span class="fn">fetch_profile</span>(user_id=<span class="nb">27993802</span>)</pre>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

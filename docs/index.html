@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAX API — Документация</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html" class="active"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<!-- ═══════════════ CONTENT ═══════════════ -->
+<main class="content">
+
+  <div class="hero">
+    <h1>MAX API</h1>
+    <p>
+      Python-библиотека для работы с мессенджером MAX (ex-TamTam / OK Messenger).
+      Реверс-инжиниринг бинарного протокола: TCP/SSL + MessagePack.
+    </p>
+    <div class="hero-meta">
+      <div class="badge-stat"><span class="val">100+</span><span class="lbl">OpCode'ов</span></div>
+      <div class="badge-stat"><span class="val">25+</span><span class="lbl">API-методов</span></div>
+      <div class="badge-stat"><span class="val">Push ✅</span><span class="lbl">real-time события</span></div>
+      <div class="badge-stat"><span class="val">v26.9.0</span><span class="lbl">APK build 6637</span></div>
+      <div class="badge-stat"><span class="val">Python 3.10+</span><span class="lbl">asyncio</span></div>
+    </div>
+  </div>
+
+  <h2>Что это такое?</h2>
+  <p>
+    <strong>MAX API</strong> — низкоуровневый клиент к мессенджеру MAX, реализованный на основе
+    реверс-инжиниринга APK версии 26.9.0. Библиотека общается с сервером
+    <code>api.oneme.ru:443</code> по бинарному протоколу (заголовок 10 байт + MessagePack-payload, опционально LZ4).
+  </p>
+  <p>
+    Архитектурно похожа на <strong>Telethon</strong> для Telegram: есть класс <code>MaxClient</code>,
+    методы-корутины, сессия в JSON, context manager.
+  </p>
+
+  <div class="note">
+    <span class="icon">ℹ️</span>
+    <div>Все сетевые методы — <code>async/await</code>. Требуется Python 3.10+ и зависимости
+    <code>msgpack</code>, <code>aiohttp</code>, <code>lz4</code>.</div>
+  </div>
+
+  <h2>Разделы документации</h2>
+  <div class="card-grid">
+    <a href="quickstart.html">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Быстрый старт</div>
+      <div class="card-desc">Установка, первое подключение, отправка сообщения</div>
+    </a>
+    <a href="auth.html">
+      <div class="card-icon">🔑</div>
+      <div class="card-title">Авторизация</div>
+      <div class="card-desc">SMS, QR, токен, регистрация</div>
+    </a>
+    <a href="chats.html">
+      <div class="card-icon">💬</div>
+      <div class="card-title">Чаты</div>
+      <div class="card-desc">Список, история, участники, создание</div>
+    </a>
+    <a href="messages.html">
+      <div class="card-icon">✉️</div>
+      <div class="card-title">Сообщения</div>
+      <div class="card-desc">Отправка, редактирование, удаление, реакции</div>
+    </a>
+    <a href="contacts.html">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Контакты</div>
+      <div class="card-desc">Поиск, список, блокировка</div>
+    </a>
+    <a href="opcodes.html">
+      <div class="card-icon">🔢</div>
+      <div class="card-title">Таблица OpCode</div>
+      <div class="card-desc">100+ wire-кодов операций</div>
+    </a>
+  </div>
+
+  <h2>Структура пакета</h2>
+  <pre><span class="cm"># Бинарный пакет MAX (10-байтный заголовок)</span>
+<span class="cm">┌──────────┬──────────┬──────────┬──────────┬──────────────────────────────┐</span>
+<span class="cm">│ ver (1b) │ cmd (1b) │ seq (2b) │ op  (2b) │ length (4b) │ payload ...  │</span>
+<span class="cm">└──────────┴──────────┴──────────┴──────────┴──────────────────────────────┘</span>
+<span class="cm"># payload = msgpack({...})  или  lz4_compress(msgpack({...}))  если >= 32 байт</span></pre>
+
+  <h2>Быстрый пример</h2>
+  <pre><span class="kw">import</span> asyncio
+<span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    <span class="kw">async with</span> <span class="cl">MaxClient</span>(<span class="st">"my_session"</span>) <span class="kw">as</span> client:
+        <span class="cm"># Первый вход — по SMS</span>
+        <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79001234567"</span>)
+        <span class="kw">await</span> client.<span class="fn">sign_in</span>(input(<span class="st">"Код из SMS: "</span>))
+
+        <span class="cm"># Профиль и чаты</span>
+        me    = client.me             <span class="cm"># dict из LOGIN-кэша</span>
+        chats = client.cached_chats   <span class="cm"># list чатов из LOGIN-кэша</span>
+
+        <span class="cm"># Отправить сообщение</span>
+        result = <span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id=<span class="nb">34540359</span>, text=<span class="st">"Привет!"</span>)
+        print(result[<span class="st">"message"</span>][<span class="st">"id"</span>])  <span class="cm"># ID отправленного сообщения</span>
+
+asyncio.<span class="fn">run</span>(main())</pre>
+
+  <h2>Зависимости</h2>
+  <table class="params-table">
+    <thead><tr><th>Пакет</th><th>Версия</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><code>msgpack</code></td><td class="type">≥1.0</td><td>Сериализация пакетов</td></tr>
+      <tr><td><code>aiohttp</code></td><td class="type">≥3.9</td><td>HTTP-запросы к OK API</td></tr>
+      <tr><td><code>lz4</code></td><td class="type">≥4.0</td><td>Сжатие больших пакетов</td></tr>
+    </tbody>
+  </table>
+
+</main>
+</body>
+</html>

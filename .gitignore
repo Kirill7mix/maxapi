@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Sessions & secrets
+*.json
+!package.json
+
+# Logs
+*.log
+log*.txt
+
+# Test / scratch files
+test_*.py
+login_and_chats.py
+send_message_test.py
+script.py
+
+# Media / binary blobs
+*.jpg
+*.jpeg
+*.png
+*.apk
+*.zip
+
+# Reverse-engineering artefacts
+decompiled*/
+decompiled2/
+jadx/
+OLD/
+
+# IDE
+.vscode/
+.idea/
+*.swp

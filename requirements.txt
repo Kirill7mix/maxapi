@@ -1,0 +1,4 @@
+# maxapi - MAX Messenger Client API
+aiohttp>=3.9
+msgpack>=1.0
+lz4>=4.0

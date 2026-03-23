@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Контакты — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html" class="active"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / Контакты</div>
+  <h1>👥 Контакты</h1>
+  <p>Список контактов, поиск, блокировки, информация о пользователях.</p>
+
+  <!-- cached_contacts -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-prop">property</span>
+      <code>client.cached_contacts</code>
+    </div>
+    <div class="method-body">
+      <p>Список <strong>активных контактов</strong> из кэша LOGIN-ответа. Загружается при <code>connect()</code>.</p>
+      <div class="returns"><strong>→ list[dict]</strong></div>
+      <pre><span class="kw">for</span> contact <span class="kw">in</span> client.cached_contacts:
+    print(contact.get(<span class="st">'id'</span>), contact.get(<span class="st">'name'</span>))</pre>
+    </div>
+  </div>
+
+  <!-- get_contacts -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_contacts(status="BLOCKED")</code>
+      <span class="method-opcode">CONTACT_LIST · opcode 36</span>
+    </div>
+    <div class="method-body">
+      <p>Возвращает список контактов по статусу с сервера. Подтверждено ✅</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>status</code></td>
+            <td class="type">str</td>
+            <td>
+              Фильтр статуса:<br>
+              <code>"BLOCKED"</code> — заблокированные контакты<br>
+              <code>"REMOVED"</code> — удалённые контакты
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ list[dict]</strong> — список контактов</div>
+
+      <div class="note">
+        <span class="icon">ℹ️</span>
+        <div>Обычные активные контакты загружаются из LOGIN-кэша через <code>cached_contacts</code>.
+        Запрос <code>CONTACT_LIST</code> используется только для заблокированных и удалённых.</div>
+      </div>
+
+      <div class="warn">
+        <span class="icon">⚠️</span>
+        <div>Сервер принимает строго <code>count=40</code> в wire-параметрах. Другие значения
+        вызывают разрыв соединения.</div>
+      </div>
+
+      <pre><span class="cm"># Заблокированные контакты</span>
+blocked = <span class="kw">await</span> client.<span class="fn">get_contacts</span>(status=<span class="st">"BLOCKED"</span>)
+print(<span class="st">f"Заблокировано: {len(blocked)}"</span>)
+
+<span class="cm"># Удалённые контакты</span>
+removed = <span class="kw">await</span> client.<span class="fn">get_contacts</span>(status=<span class="st">"REMOVED"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- search_contacts -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>search_contacts(query)</code>
+      <span class="method-opcode">CONTACT_SEARCH · opcode 37</span>
+    </div>
+    <div class="method-body">
+      <p>Поиск пользователей по имени или номеру телефона.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>query</code></td><td class="type">str</td><td>Поисковый запрос: имя, фамилия или номер телефона</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> с ключом <code>contacts</code></div>
+      <pre>results = <span class="kw">await</span> client.<span class="fn">search_contacts</span>(<span class="st">"Иван Петров"</span>)
+<span class="kw">for</span> c <span class="kw">in</span> results.get(<span class="st">"contacts"</span>, []):
+    print(c[<span class="st">"id"</span>], c.get(<span class="st">"name"</span>))</pre>
+    </div>
+  </div>
+
+  <!-- search -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>search(query)</code>
+      <span class="method-opcode">CONTACT_SEARCH + PUBLIC_SEARCH · глобальный</span>
+    </div>
+    <div class="method-body">
+      <p>
+        Глобальный поиск — аналог <code>get_entity()</code> в Telethon.
+        Одновременно ищет в кэше чатов, серверных контактах и публичных чатах.
+      </p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>query</code></td><td class="type">str</td><td>Имя, ник или часть названия чата</td></tr>
+        </tbody>
+      </table>
+
+      <div class="returns"><strong>→ dict</strong> с ключами:
+        <code>chats</code>, <code>contacts</code>, <code>public</code>
+      </div>
+
+      <h3>Источники результатов</h3>
+      <table class="params-table">
+        <thead><tr><th>Ключ</th><th>Источник</th><th>Сеть?</th></tr></thead>
+        <tbody>
+          <tr><td><code>chats</code></td><td>Кэш LOGIN — поиск по названию/имени/id</td><td>❌ нет</td></tr>
+          <tr><td><code>contacts</code></td><td>CONTACT_SEARCH (opcode 37)</td><td>✅ да</td></tr>
+          <tr><td><code>public</code></td><td>PUBLIC_SEARCH (opcode 60) — каналы и группы</td><td>✅ да</td></tr>
+        </tbody>
+      </table>
+      <p><code>contacts</code> и <code>public</code> запрашиваются параллельно через <code>asyncio.gather()</code>.</p>
+
+      <pre>results = <span class="kw">await</span> client.<span class="fn">search</span>(<span class="st">"Иван"</span>)
+
+<span class="kw">for</span> chat <span class="kw">in</span> results[<span class="st">"chats"</span>]:
+    print(<span class="st">"Чат:"</span>, chat[<span class="st">"id"</span>])
+
+<span class="kw">for</span> c <span class="kw">in</span> results[<span class="st">"contacts"</span>]:
+    print(<span class="st">"Контакт:"</span>, c.get(<span class="st">"name"</span>), c[<span class="st">"id"</span>])
+
+<span class="kw">for</span> p <span class="kw">in</span> results[<span class="st">"public"</span>]:
+    print(<span class="st">"Публичный чат:"</span>, p.get(<span class="st">"name"</span>))</pre>
+    </div>
+  </div>
+
+  <!-- contact_info -->
+  <h2>Другие контактные методы</h2>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>_send_command(OpCode.CONTACT_INFO, {"uid": uid})</code>
+      <span class="method-opcode">CONTACT_INFO · opcode 32</span>
+    </div>
+    <div class="method-body">
+      <p>Получить информацию о конкретном пользователе по UID. Высокоуровневой обёртки нет — используйте напрямую:</p>
+      <pre>info = <span class="kw">await</span> client.<span class="fn">_send_command</span>(
+    OpCode.CONTACT_INFO,
+    {<span class="st">"uid"</span>: <span class="nb">27993802</span>}
+)</pre>
+    </div>
+  </div>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>_send_command(OpCode.CONTACT_PRESENCE, {"uid": uid})</code>
+      <span class="method-opcode">CONTACT_PRESENCE · opcode 35</span>
+    </div>
+    <div class="method-body">
+      <p>Получить онлайн-статус пользователя.</p>
+    </div>
+  </div>
+
+  <!-- OpCodes таблица -->
+  <h2>Все контактные OpCode</h2>
+  <table class="opcode-table">
+    <thead><tr><th>Константа</th><th>Opcode</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td>CONTACT_INFO</td><td>32</td><td>Информация о пользователе</td></tr>
+      <tr><td>CONTACT_ADD</td><td>33</td><td>Добавить контакт</td></tr>
+      <tr><td>CONTACT_UPDATE</td><td>34</td><td>Обновить контакт</td></tr>
+      <tr><td>CONTACT_PRESENCE</td><td>35</td><td>Статус онлайн</td></tr>
+      <tr><td>CONTACT_LIST</td><td>36</td><td>Список контактов по статусу</td></tr>
+      <tr><td>CONTACT_SEARCH</td><td>37</td><td>Поиск контактов</td></tr>
+      <tr><td>CONTACT_MUTUAL</td><td>38</td><td>Общие контакты</td></tr>
+      <tr><td>CONTACT_PHOTOS</td><td>39</td><td>Фотографии контакта</td></tr>
+      <tr><td>CONTACT_SORT</td><td>30</td><td>Сортировка контактов</td></tr>
+      <tr><td>CONTACT_VERIFY</td><td>42</td><td>Верификация контакта</td></tr>
+      <tr><td>CONTACT_INFO_BY_PHONE</td><td>46</td><td>Поиск по номеру телефона</td></tr>
+      <tr><td>NOTIF_CONTACT</td><td>131</td><td>Входящее: изменение контакта</td></tr>
+      <tr><td>NOTIF_PRESENCE</td><td>132</td><td>Входящее: изменение онлайн-статуса</td></tr>
+      <tr><td>NOTIF_CONTACT_SORT</td><td>139</td><td>Входящее: новый порядок контактов</td></tr>
+      <tr><td>NOTIF_PROFILE</td><td>159</td><td>Входящее: изменение профиля</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Структура контакта -->
+  <h2>Структура объекта контакта</h2>
+  <pre>{
+  <span class="st">"id"</span>:           <span class="nb">27993802</span>,
+  <span class="st">"phone"</span>:        <span class="st">"+79001234567"</span>,
+  <span class="st">"firstName"</span>:    <span class="st">"Иван"</span>,
+  <span class="st">"lastName"</span>:     <span class="st">"Петров"</span>,
+  <span class="st">"name"</span>:         <span class="st">"Иван Петров"</span>,
+  <span class="st">"updateTime"</span>:   <span class="nb">1774000000000</span>,   <span class="cm"># Unix ms</span>
+  <span class="st">"accountStatus"</span>: <span class="nb">0</span>,
+  <span class="st">"country"</span>:      <span class="st">"RU"</span>
+}</pre>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чаты — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html" class="active"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / Чаты</div>
+  <h1>💬 Чаты</h1>
+  <p>Список чатов, история сообщений, создание, настройки, участники.</p>
+
+  <!-- cached_chats -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-prop">property</span>
+      <code>client.cached_chats</code>
+    </div>
+    <div class="method-body">
+      <p>Список чатов из кэша LOGIN-ответа. Загружается при <code>connect()</code>, без дополнительных запросов. Подтверждено ✅</p>
+      <div class="returns"><strong>→ list[dict]</strong></div>
+      <h3>Структура объекта чата</h3>
+      <table class="params-table">
+        <thead><tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>type</code></td><td class="type">str</td><td><code>DIALOG</code>, <code>GROUP</code>, <code>CHANNEL</code></td></tr>
+          <tr><td><code>status</code></td><td class="type">str</td><td><code>ACTIVE</code>, <code>BLOCKED</code></td></tr>
+          <tr><td><code>newMessages</code></td><td class="type">int</td><td>Количество непрочитанных</td></tr>
+          <tr><td><code>lastMessage</code></td><td class="type">dict</td><td>Последнее сообщение чата</td></tr>
+          <tr><td><code>lastEventTime</code></td><td class="type">int</td><td>Время последнего события (Unix ms)</td></tr>
+          <tr><td><code>participants</code></td><td class="type">dict</td><td>uid → timestamp (для диалогов)</td></tr>
+          <tr><td><code>owner</code></td><td class="type">int</td><td>UID владельца (для групп)</td></tr>
+          <tr><td><code>options</code></td><td class="type">dict</td><td>Флаги: <code>SERVICE_CHAT</code> и др.</td></tr>
+        </tbody>
+      </table>
+      <pre>chats = client.cached_chats
+<span class="kw">for</span> chat <span class="kw">in</span> chats:
+    unread = chat.get(<span class="st">'newMessages'</span>, <span class="nb">0</span>)
+    last   = chat.get(<span class="st">'lastMessage'</span>, {}).get(<span class="st">'text'</span>, <span class="st">''</span>)
+    print(<span class="st">f"[{chat['type']}] id={chat['id']} unread={unread}"</span>)
+    <span class="kw">if</span> last:
+        print(<span class="st">f"  └─ {last[:60]}"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- get_chats -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_chats()</code>
+      <span class="method-opcode">Кэш LOGIN</span>
+    </div>
+    <div class="method-body">
+      <p>
+        Возвращает полный список чатов из кэша, полученного при входе (LOGIN, opcode 2).
+        Никаких сетевых запросов не делает.
+      </p>
+      <div class="tip" style="background:#1a3a1a;border-left:4px solid #4caf50;padding:10px 14px;border-radius:4px;margin:10px 0;">
+        <strong style="color:#4caf50">✅ Подтверждено</strong> — 7 чатов при тесте. Это основной способ получить список чатов.
+      </div>
+      <div class="returns"><strong>→ list[dict]</strong> — снапшот чатов на момент入ода.</div>
+    </div>
+  </div>
+
+  <!-- poll_chats -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>poll_chats(count=50)</code>
+      <span class="method-opcode">CHATS_LIST · opcode 53</span>
+    </div>
+    <div class="method-body">
+      <p>
+        Delta-опрос: запрашивает у сервера чаты, изменившиеся с момента последнего маркера.
+        Автоматически мёрджит изменения в кэш и обновляет маркер для следующего вызова.
+      </p>
+
+      <h3>Как работает delta-sync</h3>
+      <p>Протокол реализует delta-синхронизацию через поле <code>marker</code>:</p>
+      <ol style="line-height:1.8">
+        <li>При логине <code>LOGIN</code> отдаёт полный снапшот чатов + <code>chatMarker=N</code></li>
+        <li><code>poll_chats()</code> отправляет <code>CHATS_LIST{marker: N, count: 50}</code></li>
+        <li>Сервер возвращает только чаты с новой активностью начиная с маркера <code>N</code></li>
+        <li>В ответе приходит новый маркер — он сохраняется для следующего <code>poll_chats()</code></li>
+      </ol>
+
+      <h3>Wire-параметры (opcode 53)</h3>
+      <pre>{
+  <span class="st">"marker"</span>: <span class="nb">0</span>,   <span class="cm"># обязательно! без него ошибка proto.payload</span>
+  <span class="st">"count"</span>:  <span class="nb">50</span>
+}</pre>
+      <div class="warn">
+        <span class="icon">⚠️</span>
+        <div>
+          Поле <code>marker</code> обязательно — его отсутствие вызывает ошибку
+          <code>proto.payload: Field requirement failed: marker</code>.<br>
+          Передача <code>types</code> или <code>withLastMessage</code> вызывает немедленный
+          TCP-дисконнект (битые параметры сервера).
+        </div>
+      </div>
+
+      <div class="returns"><strong>→ list[dict]</strong> — список изменившихся чатов (пустой, если нет новых).</div>
+      <h3>Пример</h3>
+      <pre><span class="cm"># Получить все чаты (снапшот при входе)</span>
+chats = <span class="kw">await</span> client.<span class="fn">get_chats</span>()
+
+<span class="cm"># Получить обновления чатов с момента последнего опроса</span>
+delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>()
+<span class="kw">if</span> delta:
+    print(<span class="st">f"Обновилось {len(delta)} чатов"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- get_chat_history -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_chat_history(chat_id, count=20, from_msg=None)</code>
+      <span class="method-opcode">CHAT_HISTORY · opcode 49</span>
+    </div>
+    <div class="method-body">
+      <p>Загружает историю сообщений чата. Подтверждено ✅</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+          <tr><td><code>count</code></td><td class="type">int</td><td>Количество сообщений (backward). По умолчанию 20.</td></tr>
+          <tr><td><code>from_msg</code></td><td class="type">int</td><td class="optional">Необязательно. Точка отчёта (Unix ms). По умолчанию — текущее время.</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> с ключом <code>messages</code> (list)</div>
+
+      <h3>Wire-параметры запроса</h3>
+      <pre>{
+  <span class="st">"chatId"</span>:      <span class="nb">34540359</span>,
+  <span class="st">"from"</span>:        <span class="nb">1774188368109</span>,  <span class="cm"># текущее время в ms ← обязательно!</span>
+  <span class="st">"backward"</span>:    <span class="nb">20</span>,
+  <span class="st">"forward"</span>:     <span class="nb">0</span>,
+  <span class="st">"getMessages"</span>: <span class="nb">true</span>,
+  <span class="st">"getChat"</span>:     <span class="nb">false</span>,
+  <span class="st">"itemType"</span>:    <span class="st">"REGULAR"</span>,  <span class="cm"># или "DELAYED"</span>
+  <span class="st">"interactive"</span>: <span class="nb">true</span>
+}</pre>
+      <div class="warn">
+        <span class="icon">⚠️</span>
+        <div>Поле <code>from</code> обязательно. Без него сервер вернёт пустой ответ.
+        Допустимые значения <code>itemType</code>: <code>"REGULAR"</code> и <code>"DELAYED"</code>.</div>
+      </div>
+
+      <h3>Структура сообщения в ответе</h3>
+      <table class="params-table">
+        <thead><tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td class="type">int</td><td>ID сообщения (64-бит)</td></tr>
+          <tr><td><code>time</code></td><td class="type">int</td><td>Время отправки (Unix ms)</td></tr>
+          <tr><td><code>type</code></td><td class="type">str</td><td><code>USER</code>, <code>SYSTEM</code>, <code>BOT</code></td></tr>
+          <tr><td><code>sender</code></td><td class="type">int</td><td>UID отправителя</td></tr>
+          <tr><td><code>text</code></td><td class="type">str</td><td>Текст сообщения</td></tr>
+          <tr><td><code>attaches</code></td><td class="type">list</td><td>Вложения (фото, файлы и т.д.)</td></tr>
+          <tr><td><code>elements</code></td><td class="type">list</td><td>Форматирование (BOLD, LINK и т.д.)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Пример</h3>
+      <pre>data = <span class="kw">await</span> client.<span class="fn">get_chat_history</span>(chat_id=<span class="nb">34540359</span>, count=<span class="nb">10</span>)
+<span class="kw">for</span> msg <span class="kw">in</span> data.get(<span class="st">"messages"</span>, []):
+    text = msg.get(<span class="st">"text"</span>, <span class="st">""</span>)[:80]
+    print(<span class="st">f"[{msg['sender']}]: {text}"</span>)</pre>
+    </div>
+  </div>
+
+  <!-- get_chat_info -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_chat_info(chat_id)</code>
+      <span class="method-opcode">CHAT_INFO · opcode 48</span>
+    </div>
+    <div class="method-body">
+      <p>Возвращает полную информацию о чате.</p>
+      <div class="returns"><strong>→ dict</strong></div>
+      <pre>info = <span class="kw">await</span> client.<span class="fn">get_chat_info</span>(chat_id=<span class="nb">34540359</span>)</pre>
+    </div>
+  </div>
+
+  <!-- create_chat -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>create_chat(title, member_ids=None)</code>
+      <span class="method-opcode">CHAT_CREATE · opcode 63</span>
+    </div>
+    <div class="method-body">
+      <p>Создаёт новый групповой чат.</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>title</code></td><td class="type">str</td><td>Название группы</td></tr>
+          <tr><td><code>member_ids</code></td><td class="type">list[int]</td><td class="optional">Необязательно. Список UID участников</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong></div>
+      <pre>chat = <span class="kw">await</span> client.<span class="fn">create_chat</span>(
+    title=<span class="st">"Моя группа"</span>,
+    member_ids=[<span class="nb">27993802</span>, <span class="nb">12277280</span>]
+)</pre>
+    </div>
+  </div>
+
+  <!-- get_chat_members -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_chat_members(chat_id, count=100)</code>
+      <span class="method-opcode">CHAT_MEMBERS · opcode 59</span>
+    </div>
+    <div class="method-body">
+      <p>Список участников чата.</p>
+      <div class="returns"><strong>→ dict</strong> с ключом <code>members</code></div>
+    </div>
+  </div>
+
+  <!-- join_chat / leave_chat -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>join_chat(link)</code>
+      <span class="method-opcode">CHAT_JOIN · opcode 57</span>
+    </div>
+    <div class="method-body">
+      <p>Присоединяется к публичному чату/каналу по invite-ссылке.</p>
+      <div class="returns"><strong>→ dict</strong></div>
+      <pre><span class="kw">await</span> client.<span class="fn">join_chat</span>(<span class="st">"https://max.ru/join/..."</span>)</pre>
+    </div>
+  </div>
+
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>leave_chat(chat_id)</code>
+      <span class="method-opcode">CHAT_LEAVE · opcode 58</span>
+    </div>
+    <div class="method-body">
+      <p>Покидает чат.</p>
+      <div class="returns"><strong>→ dict</strong></div>
+    </div>
+  </div>
+
+  <!-- Уведомления чатов -->
+  <h2>📡 Входящие уведомления (NOTIF)</h2>
+  <table class="opcode-table">
+    <thead><tr><th>Константа</th><th>Opcode</th><th>Событие</th></tr></thead>
+    <tbody>
+      <tr><td>NOTIF_CHAT</td><td>135</td><td>Изменение чата (название, аватар, участники)</td></tr>
+      <tr><td>NOTIF_PRESENCE</td><td>132</td><td>Онлайн-статус собеседника</td></tr>
+      <tr><td>NOTIF_CONTACT_SORT</td><td>139</td><td>Изменение сортировки контактов</td></tr>
+      <tr><td>NOTIF_FOLDERS</td><td>277</td><td>Изменение папок</td></tr>
+      <tr><td>NOTIF_LOCATION</td><td>147</td><td>Новая геопозиция</td></tr>
+    </tbody>
+  </table>
+
+</main>
+</body>
+</html>

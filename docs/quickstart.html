@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Быстрый старт — MAX API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MAX API</div>
+        <div class="logo-sub">Python Library</div>
+      </div>
+    </a>
+  </div>
+  <span class="nav-section">Начало работы</span>
+  <a href="index.html"><span class="nav-icon">🏠</span> Обзор</a>
+  <a href="quickstart.html" class="active"><span class="nav-icon">⚡</span> Быстрый старт</a>
+  <span class="nav-section">API Reference</span>
+  <a href="auth.html"><span class="nav-icon">🔑</span> Авторизация</a>
+  <a href="chats.html"><span class="nav-icon">💬</span> Чаты</a>
+  <a href="messages.html"><span class="nav-icon">✉️</span> Сообщения</a>
+  <a href="contacts.html"><span class="nav-icon">👥</span> Контакты</a>
+  <a href="events.html"><span class="nav-icon">⚡</span> События</a>
+  <span class="nav-section">Справочник</span>
+  <a href="opcodes.html"><span class="nav-icon">🔢</span> Таблица OpCode</a>
+</nav>
+
+<main class="content">
+  <div class="breadcrumb"><a href="index.html">Главная</a> / Быстрый старт</div>
+  <h1>⚡ Быстрый старт</h1>
+  <p>За 5 минут — от нуля до работающего клиента.</p>
+
+  <h2>1. Установка зависимостей</h2>
+  <pre>pip install msgpack aiohttp lz4</pre>
+
+  <h2>2. Структура проекта</h2>
+  <pre>MAX/
+├── maxapi/
+│   ├── __init__.py       <span class="cm"># реэкспорт MaxClient</span>
+│   ├── client.py         <span class="cm"># основной класс MaxClient</span>
+│   ├── constants.py      <span class="cm"># OpCode, API_URL, настройки</span>
+│   ├── protocol.py       <span class="cm"># класс Packet (сериализация)</span>
+│   ├── transport.py      <span class="cm"># TCP/SSL Connection</span>
+│   └── session.py        <span class="cm"># Session (хранение токена)</span>
+└── my_session.json       <span class="cm"># создаётся автоматически после входа</span></pre>
+
+  <h2>3. Первый вход (SMS)</h2>
+  <p>При первом запуске сессии ещё нет — нужно войти через SMS-код:</p>
+  <pre><span class="kw">import</span> asyncio
+<span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    client = <span class="cl">MaxClient</span>(<span class="st">"my_session"</span>)   <span class="cm"># session = "my_session.json"</span>
+    <span class="kw">await</span> client.<span class="fn">connect</span>()
+
+    <span class="cm"># Запрашиваем SMS-код</span>
+    sent = <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79001234567"</span>)
+    print(<span class="st">f"Код отправлен, длина: {sent.code_length}"</span>)
+
+    <span class="cm"># Вводим код и входим</span>
+    code = input(<span class="st">"Введите код из SMS: "</span>)
+    result = <span class="kw">await</span> client.<span class="fn">sign_in</span>(code)
+
+    <span class="kw">if</span> result.success:
+        print(<span class="st">f"Вход выполнен! UID = {result.uid}"</span>)
+    <span class="kw">elif</span> result.needs_registration:
+        print(<span class="st">"Аккаунт не найден, нужна регистрация"</span>)
+        result = <span class="kw">await</span> client.<span class="fn">sign_up</span>(<span class="st">"Иван"</span>, <span class="st">"Петров"</span>)
+
+    <span class="kw">await</span> client.<span class="fn">disconnect</span>()
+
+asyncio.<span class="fn">run</span>(main())</pre>
+
+  <div class="tip">
+    <span class="icon">✅</span>
+    <div>После успешного входа сессия сохраняется в <code>my_session.json</code>.
+    При следующем запуске <code>connect()</code> автоматически восстановит её — повторный ввод кода не нужен.</div>
+  </div>
+
+  <h2>4. Повторный запуск (с сохранённой сессией)</h2>
+  <pre><span class="kw">import</span> asyncio
+<span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    <span class="kw">async with</span> <span class="cl">MaxClient</span>(<span class="st">"my_session"</span>) <span class="kw">as</span> client:
+        <span class="cm"># connect() + auto-login уже произошли</span>
+        print(<span class="st">f"Привет, {client.me['name']}! UID={client.uid}"</span>)
+
+        chats = client.cached_chats
+        print(<span class="st">f"Чатов: {len(chats)}"</span>)
+        <span class="kw">for</span> chat <span class="kw">in</span> chats[:5]:
+            print(<span class="st">f"  [{chat['type']}] id={chat['id']}"</span>)
+
+asyncio.<span class="fn">run</span>(main())</pre>
+
+  <h2>5. Отправить сообщение</h2>
+  <pre><span class="kw">async with</span> <span class="cl">MaxClient</span>(<span class="st">"my_session"</span>) <span class="kw">as</span> client:
+    result = <span class="kw">await</span> client.<span class="fn">send_message</span>(
+        chat_id=<span class="nb">34540359</span>,
+        text=<span class="st">"Привет от MAX API! 🚀"</span>
+    )
+    msg = result[<span class="st">"message"</span>]
+    print(<span class="st">f"Отправлено! id={msg['id']}, time={msg['time']}"</span>)</pre>
+
+  <div class="note">
+    <span class="icon">ℹ️</span>
+    <div>Сервер возвращает полный объект сообщения с назначенным ID и временной меткой.</div>
+  </div>
+
+  <h2>6. Прочитать историю чата</h2>
+  <pre><span class="kw">async with</span> <span class="cl">MaxClient</span>(<span class="st">"my_session"</span>) <span class="kw">as</span> client:
+    chats = client.cached_chats
+    chat_id = chats[<span class="nb">0</span>][<span class="st">"id"</span>]
+
+    data = <span class="kw">await</span> client.<span class="fn">get_chat_history</span>(chat_id=chat_id, count=<span class="nb">20</span>)
+    <span class="kw">for</span> msg <span class="kw">in</span> data.get(<span class="st">"messages"</span>, []):
+        print(<span class="st">f"[{msg['sender']}]: {msg.get('text','')[:80]}"</span>)</pre>
+
+  <h2>7. Context manager vs ручное управление</h2>
+  <table class="params-table">
+    <thead><tr><th>Способ</th><th>Когда использовать</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>async with MaxClient(...) as c</code></td>
+        <td>Скрипты, короткие задачи — connect/disconnect автоматически</td>
+      </tr>
+      <tr>
+        <td><code>await client.connect() … await client.disconnect()</code></td>
+        <td>Боты с длительным аптаймом, когда нужен ручной контроль</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Что дальше?</h2>
+  <div class="chips">
+    <a href="auth.html" class="chip chip-blue">🔑 Авторизация</a>
+    <a href="messages.html" class="chip chip-green">✉️ Сообщения</a>
+    <a href="chats.html" class="chip chip-purple">💬 Чаты</a>
+    <a href="opcodes.html" class="chip chip-yellow">🔢 Все OpCode'ы</a>
+  </div>
+
+</main>
+</body>
+</html>
