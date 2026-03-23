@@ -112,6 +112,7 @@ removed = <span class="kw">await</span> client.<span class="fn">get_contacts</sp
         </tbody>
       </table>
       <div class="returns"><strong>→ dict</strong> с ключом <code>contacts</code></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Внутри обёртка автоматически добавляет обязательный параметр <code>count</code>. Голый wire-запрос <code>CONTACT_SEARCH</code> без него сервер отклоняет ошибкой <code>proto.payload</code>.</div></div>
       <pre>results = <span class="kw">await</span> client.<span class="fn">search_contacts</span>(<span class="st">"Иван Петров"</span>)
 <span class="kw">for</span> c <span class="kw">in</span> results.get(<span class="st">"contacts"</span>, []):
     print(c[<span class="st">"id"</span>], c.get(<span class="st">"name"</span>))</pre>
@@ -151,6 +152,7 @@ removed = <span class="kw">await</span> client.<span class="fn">get_contacts</sp
         </tbody>
       </table>
       <p><code>contacts</code> и <code>public</code> запрашиваются параллельно через <code>asyncio.gather()</code>.</p>
+      <div class="note"><span class="icon">ℹ️</span><div>Если один из серверных источников вернул ошибку, метод не валится целиком: библиотека подставляет пустой список только для проблемного источника и возвращает частичный результат.</div></div>
 
       <pre>results = <span class="kw">await</span> client.<span class="fn">search</span>(<span class="st">"Иван"</span>)
 

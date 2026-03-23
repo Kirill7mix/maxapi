@@ -51,7 +51,7 @@
       загружая профиль, чаты и контакты в кэш.</p>
       <div class="warn">
         <span class="icon">⚠️</span>
-        <div>Необходимо вызвать перед любыми другими методами. При использовании <code>async with</code> вызывается автоматически.</div>
+        <div>Необходимо вызвать перед любыми другими методами. При использовании <code>async with</code> вызывается автоматически. Если токен невалидный или вход ещё не выполнен, соединение откроется, но <code>client.me</code> / <code>client.cached_chats</code> останутся пустыми до успешного LOGIN.</div>
       </div>
       <pre><span class="kw">await</span> client.<span class="fn">connect</span>()</pre>
     </div>
@@ -165,7 +165,7 @@ print(<span class="st">f"Ожидается {sent.code_length}-значный к
       <span class="method-opcode">LOGIN · opcode 19</span>
     </div>
     <div class="method-body">
-      <p>Быстрый вход по已 имеющемуся <code>auth_token</code> в обход SMS. Используется при автоматическом восстановлении сессии.</p>
+      <p>Быстрый вход по уже имеющемуся <code>auth_token</code> в обход SMS. Используется при автоматическом восстановлении сессии.</p>
       <div class="returns"><strong>→ AuthResult</strong></div>
     </div>
   </div>
@@ -190,7 +190,7 @@ print(<span class="st">f"Ожидается {sent.code_length}-значный к
       <code>client.me</code>
     </div>
     <div class="method-body">
-      <p>Словарь с профилем текущего пользователя. Загружается один раз при LOGIN.</p>
+      <p>Словарь с профилем текущего пользователя. Загружается один раз при успешном LOGIN.</p>
       <table class="params-table">
         <thead><tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
@@ -205,6 +205,10 @@ print(<span class="st">f"Ожидается {sent.code_length}-значный к
       </table>
       <pre>me = client.me
 print(<span class="st">f"{me['name']} ({me['phone']})"</span>)</pre>
+      <div class="note">
+        <span class="icon">ℹ️</span>
+        <div><code>client.me</code> — это уже нормализованный кэш библиотеки. Метод <code>fetch_profile()</code> возвращает другой формат: сырой объект <code>contact</code> c массивом <code>names</code>.</div>
+      </div>
     </div>
   </div>
 
@@ -247,6 +251,15 @@ print(<span class="st">f"{me['name']} ({me['phone']})"</span>)</pre>
 print(profile[<span class="st">"name"</span>])</pre>
     </div>
   </div>
+
+  <h2>Ошибки сервера</h2>
+  <div class="warn">
+    <span class="icon">⚠️</span>
+    <div>У библиотеки нет единого слоя исключений для всех API-методов. Транспортные проблемы поднимаются как исключения, но многие прикладные ошибки сервера приходят как обычный ответ <code>{"error": "...", "message": "..."}</code>. Такой ответ нужно проверять вручную.</div>
+  </div>
+  <pre>result = <span class="kw">await</span> client.<span class="fn">get_chat_info</span>(<span class="nb">123</span>)
+<span class="kw">if</span> result.get(<span class="st">"error"</span>):
+    print(result[<span class="st">"error"</span>], result.get(<span class="st">"message"</span>))</pre>
 
   <div class="method">
     <div class="method-header">

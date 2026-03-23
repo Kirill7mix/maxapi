@@ -43,7 +43,7 @@
       <code>client.cached_chats</code>
     </div>
     <div class="method-body">
-      <p>Список чатов из кэша LOGIN-ответа. Загружается при <code>connect()</code>, без дополнительных запросов. Подтверждено ✅</p>
+      <p>Список чатов из кэша LOGIN-ответа. Заполняется после успешного <code>LOGIN</code>, без дополнительных запросов. Подтверждено ✅</p>
       <div class="returns"><strong>→ list[dict]</strong></div>
       <h3>Структура объекта чата</h3>
       <table class="params-table">
@@ -205,6 +205,7 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
     </div>
     <div class="method-body">
       <p>Возвращает полную информацию о чате.</p>
+      <div class="warn"><span class="icon">⚠️</span><div>Метод безопасно использовать для групп и каналов. Для <code>DIALOG</code> сервер обычно отвечает ошибкой в виде <code>{"error": ...}</code>, а на некоторых сессиях после этого ещё и рвёт TCP-соединение. После такого вызова может понадобиться переподключение.</div></div>
       <div class="returns"><strong>→ dict</strong></div>
       <pre>info = <span class="kw">await</span> client.<span class="fn">get_chat_info</span>(chat_id=<span class="nb">34540359</span>)</pre>
     </div>
@@ -243,6 +244,7 @@ delta = <span class="kw">await</span> client.<span class="fn">poll_chats</span>(
     </div>
     <div class="method-body">
       <p>Список участников чата.</p>
+      <div class="warn"><span class="icon">⚠️</span><div>Ограничение то же, что у <code>get_chat_info()</code>: для личных диалогов сервер не возвращает список участников. Используйте этот метод только для групп / каналов.</div></div>
       <div class="returns"><strong>→ dict</strong> с ключом <code>members</code></div>
     </div>
   </div>

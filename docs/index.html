@@ -124,9 +124,15 @@
 
         <span class="cm"># Отправить сообщение</span>
         result = <span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id=<span class="nb">34540359</span>, text=<span class="st">"Привет!"</span>)
-        print(result[<span class="st">"message"</span>][<span class="st">"id"</span>])  <span class="cm"># ID отправленного сообщения</span>
+        msg = result[<span class="st">"message"</span>]
+        print(msg.get(<span class="st">"msgId"</span>) <span class="kw">or</span> msg.get(<span class="st">"id"</span>))  <span class="cm"># ID отправленного сообщения</span>
 
 asyncio.<span class="fn">run</span>(main())</pre>
+
+  <div class="note">
+    <span class="icon">ℹ️</span>
+    <div>Высокоуровневые методы MAX API часто возвращают сырой ответ сервера. Проверяйте не только ожидаемые поля, но и наличие <code>error</code> в ответе.</div>
+  </div>
 
   <h2>Зависимости</h2>
   <table class="params-table">

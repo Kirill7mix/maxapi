@@ -124,7 +124,7 @@ fmt = (FormattedText()
   <div class="method">
     <div class="method-header">
       <span class="method-badge badge-async">async</span>
-      <code>forward_message(to_chat_id, from_chat_id, message_id, text="")</code>
+      <code>forward_message(to_chat_id, from_chat_id, message_id)</code>
       <span class="method-opcode">MSG_SEND · opcode 64 (link.type=FORWARD)</span>
     </div>
     <div class="method-body">
@@ -135,10 +135,10 @@ fmt = (FormattedText()
           <tr><td><code>to_chat_id</code></td><td class="type">int</td><td>ID чата-получателя</td></tr>
           <tr><td><code>from_chat_id</code></td><td class="type">int</td><td>ID чата-источника</td></tr>
           <tr><td><code>message_id</code></td><td class="type">int</td><td>ID пересылаемого сообщения</td></tr>
-          <tr><td><code>text</code></td><td class="type">str</td><td class="optional">Необязательно. Дополнительный текст</td></tr>
         </tbody>
       </table>
       <div class="returns"><strong>→ dict</strong> — ответ MSG_SEND</div>
+      <div class="warn"><span class="icon">⚠️</span><div>Комментарий при пересылке не поддерживается. Если отправить непустой <code>text</code> вместе с <code>link.type="FORWARD"</code>, сервер возвращает <code>errors.forward.text.not-empty</code>. Поэтому библиотека всегда шлёт пустой текст.</div></div>
       <pre><span class="kw">await</span> client.<span class="fn">forward_message</span>(
     to_chat_id=<span class="nb">34540359</span>,
     from_chat_id=<span class="nb">63530148</span>,
@@ -312,10 +312,13 @@ token = <span class="kw">await</span> client.<span class="fn">upload_photo</span
       <h3>Пример</h3>
       <pre><span class="cm"># Обычное сообщение</span>
 result = <span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id=<span class="nb">34540359</span>, text=<span class="st">"Тест"</span>)
-msg_id = result[<span class="st">"message"</span>][<span class="st">"id"</span>]
+    msg = result[<span class="st">"message"</span>]
+    msg_id = msg.get(<span class="st">"msgId"</span>) <span class="kw">or</span> msg.get(<span class="st">"id"</span>)
 
 <span class="cm"># Ответ (цитата)</span>
 <span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id=<span class="nb">34540359</span>, text=<span class="st">"Ответ!"</span>, reply_to=msg_id)</pre>
+
+      <div class="note"><span class="icon">ℹ️</span><div>В ответах сервера встречаются оба ключа идентификатора сообщения: <code>id</code> и <code>msgId</code>. Это касается не только истории, но и результатов <code>send_message()</code> / <code>forward_message()</code>.</div></div>
 
       <h3>Ответ сервера</h3>
       <pre>{
@@ -495,6 +498,7 @@ msg_id = result[<span class="st">"message"</span>][<span class="st">"id"</span>]
     </div>
     <div class="method-body">
       <p>Получает превью ссылки (title, description, thumbnail).</p>
+      <div class="note"><span class="icon">ℹ️</span><div>На wire-уровне метод отправляет поле <code>link</code>, хотя Python-аргумент называется <code>url</code>. Если превью не найдено, сервер обычно возвращает обычный ответ с <code>error="link.not.found"</code>, а не исключение.</div></div>
       <div class="returns"><strong>→ dict</strong></div>
       <pre>info = <span class="kw">await</span> client.<span class="fn">get_link_info</span>(<span class="st">"https://example.com"</span>)</pre>
     </div>
