@@ -114,18 +114,22 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
     <div class="method-body">
       <p>
         Универсальный декоратор — регистрирует обработчик для любого opcode.
-        Для NOTIF_TYPING передаёт объект <code>TypingEvent</code>, для остальных — сырой <code>dict</code>.
+        Для NOTIF_TYPING передаёт объект <code>TypingEvent</code>, для NOTIF_PRESENCE — <code>PresenceEvent</code>, для NOTIF_MSG_REACTIONS_CHANGED — <code>ReactionEvent</code>, для остальных — сырой <code>dict</code>.
       </p>
       <pre><span class="kw">from</span> maxapi <span class="kw">import</span> OpCode
-<span class="kw">from</span> maxapi.types <span class="kw">import</span> TypingEvent
+<span class="kw">from</span> maxapi <span class="kw">import</span> TypingEvent, PresenceEvent, ReactionEvent
 
 <span class="nd">@client.on</span>(OpCode.NOTIF_TYPING)
 <span class="kw">async def</span> <span class="fn">on_typing</span>(event: TypingEvent):
     print(f<span class="st">"Печатает: {event.sender_id} в чате {event.chat_id}"</span>)
 
-<span class="nd">@client.on</span>(OpCode.NOTIF_PRESENCE)
-<span class="kw">async def</span> <span class="fn">on_presence</span>(event: dict):
-    print(event)</pre>
+<span class="nd">@client.on_presence</span>
+<span class="kw">async def</span> <span class="fn">on_presence</span>(event: PresenceEvent):
+    print(<span class="st">f"{event.user_id} {'онлайн' if event.is_online else 'оффлайн'}"</span>)
+
+<span class="nd">@client.on_reaction</span>
+<span class="kw">async def</span> <span class="fn">on_reaction</span>(event: ReactionEvent):
+    print(<span class="st">f"Реакция {event.top_reaction} на сообщение {event.message_id}"</span>)</pre>
 
       <h3>Можно вешать несколько хендлеров на один opcode</h3>
       <pre><span class="nd">@client.on_message</span>
@@ -166,6 +170,8 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
       <tr><td><code>time_ms</code></td><td class="type">int</td><td>Время отправки (Unix, миллисекунды)</td></tr>
       <tr><td><code>elements</code></td><td class="type">list[dict]</td><td>Форматирование текста (STRONG, EMPHASIZED, LINK и др.)</td></tr>
       <tr><td><code>attaches</code></td><td class="type">list[dict]</td><td>Вложения (PHOTO, STICKER, FILE, VIDEO и др.)</td></tr>
+      <tr><td><code>is_sticker</code></td><td class="type">bool</td><td>True — если вложение является стикером</td></tr>
+      <tr><td><code>sticker</code></td><td class="type">dict | None</td><td>Объект стикера (stickerType, url, lottieUrl, stickerId, setId, tags) или None</td></tr>
       <tr><td><code>link</code></td><td class="type">dict | None</td><td>Объект ссылки: REPLY (цитата) или FORWARD (пересылка)</td></tr>
       <tr><td><code>is_outgoing</code></td><td class="type">bool</td><td>True — если сообщение отправили мы</td></tr>
       <tr><td><code>is_reply</code></td><td class="type">bool</td><td>True — если это ответ (цитата) на другое сообщение</td></tr>
@@ -205,6 +211,46 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
     </tbody>
   </table>
 
+  <!-- PresenceEvent class -->
+  <h2 style="margin-top:36px">Класс <code>PresenceEvent</code></h2>
+  <p>Объект передаваемый в <code>@client.on_presence</code> хендлер (NOTIF_PRESENCE, opcode 132).</p>
+
+  <table class="params-table">
+    <thead><tr><th>Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><code>user_id</code></td><td class="type">int</td><td>UID пользователя</td></tr>
+      <tr><td><code>seen</code></td><td class="type">int</td><td>Unix-timestamp последнего появления (секунды)</td></tr>
+      <tr><td><code>status</code></td><td class="type">int | None</td><td>1 = онлайн, None = оффлайн</td></tr>
+      <tr><td><code>is_online</code></td><td class="type">bool</td><td>True — если пользователь сейчас онлайн</td></tr>
+      <tr><td><code>raw</code></td><td class="type">dict</td><td>Полный dict из сервера</td></tr>
+    </tbody>
+  </table>
+
+  <pre><span class="kw">@client.on_presence</span>
+<span class="kw">async def</span> <span class="fn">on_presence</span>(event: PresenceEvent):
+    <span class="kw">if</span> event.is_online:
+        print(<span class="st">f"Пользователь {event.user_id} вошёл онлайн"</span>)</pre>
+
+  <!-- ReactionEvent class -->
+  <h2 style="margin-top:36px">Класс <code>ReactionEvent</code></h2>
+  <p>Объект передаваемый в <code>@client.on_reaction</code> хендлер (NOTIF_MSG_REACTIONS_CHANGED, opcode 155).</p>
+
+  <table class="params-table">
+    <thead><tr><th>Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата</td></tr>
+      <tr><td><code>message_id</code></td><td class="type">int</td><td>ID сообщения с реакцией</td></tr>
+      <tr><td><code>counters</code></td><td class="type">list[dict]</td><td>Список реакций: <code>[{"reaction": "🤣", "count": 1}, ...]</code></td></tr>
+      <tr><td><code>total_count</code></td><td class="type">int</td><td>Общее количество реакций</td></tr>
+      <tr><td><code>top_reaction</code></td><td class="type">str | None</td><td>Реакция с наибольшим количеством</td></tr>
+      <tr><td><code>raw</code></td><td class="type">dict</td><td>Полный dict из сервера</td></tr>
+    </tbody>
+  </table>
+
+  <pre><span class="kw">@client.on_reaction</span>
+<span class="kw">async def</span> <span class="fn">on_reaction</span>(event: ReactionEvent):
+    print(<span class="st">f"Реакция {event.top_reaction} на сообщение {event.message_id}"</span>)</pre>
+
   <!-- Таблица push-опкодов -->
   <h2 style="margin-top:36px">Push-опкоды сервера</h2>
   <p>Все входящие уведомления имеют opcode ≥ 128 и никогда не являются ответами на наши запросы.</p>
@@ -216,14 +262,14 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
       <tr><td><code>129</code></td><td><code>NOTIF_TYPING</code></td><td>Пользователь печатает ✅</td><td><code>TypingEvent</code></td></tr>
       <tr><td><code>130</code></td><td><code>NOTIF_MARK</code></td><td>Сообщения прочитаны</td><td><code>dict</code></td></tr>
       <tr><td><code>131</code></td><td><code>NOTIF_CONTACT</code></td><td>Изменение контакта</td><td><code>dict</code></td></tr>
-      <tr><td><code>132</code></td><td><code>NOTIF_PRESENCE</code></td><td>Статус онлайн/оффлайн</td><td><code>dict</code></td></tr>
+      <tr><td><code>132</code></td><td><code>NOTIF_PRESENCE</code></td><td>Статус онлайн/оффлайн ✅</td><td><code>PresenceEvent</code></td></tr>
       <tr><td><code>134</code></td><td><code>NOTIF_CONFIG</code></td><td>Обновление конфигурации</td><td><code>dict</code></td></tr>
       <tr><td><code>135</code></td><td><code>NOTIF_CHAT</code></td><td>Изменение чата</td><td><code>dict</code></td></tr>
       <tr><td><code>136</code></td><td><code>NOTIF_ATTACH</code></td><td>Новое вложение</td><td><code>dict</code></td></tr>
       <tr><td><code>137</code></td><td><code>NOTIF_CALL_START</code></td><td>Входящий звонок</td><td><code>dict</code></td></tr>
       <tr><td><code>142</code></td><td><code>NOTIF_MSG_DELETE</code></td><td>Удаление сообщения</td><td><code>dict</code></td></tr>
       <tr><td><code>152</code></td><td><code>NOTIF_DRAFT</code></td><td>Черновик сохранён</td><td><code>dict</code></td></tr>
-      <tr><td><code>155</code></td><td><code>NOTIF_MSG_REACTIONS_CHANGED</code></td><td>Реакции изменились</td><td><code>dict</code></td></tr>
+      <tr><td><code>155</code></td><td><code>NOTIF_MSG_REACTIONS_CHANGED</code></td><td>Реакции изменились ✅</td><td><code>ReactionEvent</code></td></tr>
       <tr><td><code>292</code></td><td><code>NOTIF_BANNERS</code></td><td>Баннеры/рекламные уведомления</td><td><code>dict</code></td></tr>
     </tbody>
   </table>

@@ -32,7 +32,7 @@ from maxapi.constants import API_URL, APP_KEY, OpCode
 from maxapi.protocol import Packet
 from maxapi.transport import Connection, DEFAULT_HOST, DEFAULT_PORT
 from maxapi.session import Session
-from maxapi.types import Message, TypingEvent
+from maxapi.types import Message, TypingEvent, PresenceEvent, ReactionEvent
 
 logger = logging.getLogger("maxapi.client")
 
@@ -209,6 +209,37 @@ class MaxClient:
         self._handlers.setdefault(OpCode.NOTIF_MESSAGE, []).append(func)
         return func
 
+    def on_reaction(self, func: Callable) -> Callable:
+        """
+        Декоратор: обработчик изменения реакций (NOTIF_MSG_REACTIONS_CHANGED, opcode 155).
+
+        Передаёт объект ReactionEvent.
+
+        Пример::
+
+            @client.on_reaction
+            async def handler(event: ReactionEvent):
+                print(f"Реакция на сообщение {event.message_id}: {event.top_reaction}")
+        """
+        self._handlers.setdefault(OpCode.NOTIF_MSG_REACTIONS_CHANGED, []).append(func)
+        return func
+
+    def on_presence(self, func: Callable) -> Callable:
+        """
+        Декоратор: обработчик изменения статуса пользователя (NOTIF_PRESENCE, opcode 132).
+
+        Передаёт объект PresenceEvent.
+
+        Пример::
+
+            @client.on_presence
+            async def handler(event: PresenceEvent):
+                if event.is_online:
+                    print(f"Пользователь {event.user_id} вошёл онлайн")
+        """
+        self._handlers.setdefault(OpCode.NOTIF_PRESENCE, []).append(func)
+        return func
+
     async def _dispatch_notification(self, pkt: "Packet") -> None:
         """Внутренний диспетчер: вызывает обработчики по opcode пакета.
 
@@ -225,6 +256,10 @@ class MaxClient:
             event = Message.from_packet(pkt.params, self)
         elif pkt.opcode == OpCode.NOTIF_TYPING:
             event = TypingEvent(pkt.params)
+        elif pkt.opcode == OpCode.NOTIF_PRESENCE:
+            event = PresenceEvent(pkt.params)
+        elif pkt.opcode == OpCode.NOTIF_MSG_REACTIONS_CHANGED:
+            event = ReactionEvent(pkt.params)
         else:
             event = pkt.params  # сырой dict для остальных
 

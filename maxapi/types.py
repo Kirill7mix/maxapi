@@ -55,6 +55,18 @@ class Message:
         self.attaches: List[Dict[str, Any]] = msg.get("attaches", [])
         self.link: Optional[Dict[str, Any]] = msg.get("link")
 
+    @property
+    def is_sticker(self) -> bool:
+        """True — если сообщение содержит стикер."""
+        return bool(self.attaches and self.attaches[0].get("_type") == "STICKER")
+
+    @property
+    def sticker(self) -> Optional[Dict[str, Any]]:
+        """Вложение-стикер (dict) или None. Ключи: stickerType, url, lottieUrl (LOTTIE), stickerId, setId, tags."""
+        if self.is_sticker:
+            return self.attaches[0]
+        return None
+
     @classmethod
     def from_packet(cls, params: Dict[str, Any], client: "MaxClient") -> "Message":
         """Создаёт Message из params пакета NOTIF_MESSAGE."""
@@ -163,3 +175,66 @@ class TypingEvent:
     def __repr__(self) -> str:
         t = f" type={self.typing_type}" if self.typing_type else ""
         return f"<TypingEvent chat={self.chat_id} user={self.sender_id}{t}>"
+
+
+class PresenceEvent:
+    """
+    Событие изменения статуса пользователя (опкод NOTIF_PRESENCE = 132).
+
+    Атрибуты:
+        user_id   — UID пользователя
+        seen      — Unix-timestamp последнего появления (секунды)
+        status    — 1 = онлайн, None = оффлайн
+        raw       — полный dict из сервера
+    """
+
+    __slots__ = ("user_id", "seen", "status", "raw")
+
+    def __init__(self, params: Dict[str, Any]):
+        self.raw = params
+        self.user_id: int = params.get("userId", 0)
+        presence = params.get("presence", {})
+        self.seen: int = presence.get("seen", 0)
+        self.status: Optional[int] = presence.get("status")
+
+    @property
+    def is_online(self) -> bool:
+        """True — если пользователь сейчас онлайн."""
+        return self.status == 1
+
+    def __repr__(self) -> str:
+        state = "online" if self.is_online else "offline"
+        return f"<PresenceEvent user={self.user_id} {state} seen={self.seen}>"
+
+
+class ReactionEvent:
+    """
+    Событие изменения реакций на сообщение (опкод NOTIF_MSG_REACTIONS_CHANGED = 155).
+
+    Атрибуты:
+        chat_id     — ID чата
+        message_id  — ID сообщения, на которое поставили реакцию
+        counters    — список dict: [{"reaction": "🤣", "count": 1}, ...]
+        total_count — общее число реакций
+        raw         — полный dict из сервера
+    """
+
+    __slots__ = ("chat_id", "message_id", "counters", "total_count", "raw")
+
+    def __init__(self, params: Dict[str, Any]):
+        self.raw = params
+        self.chat_id: int = params.get("chatId", 0)
+        self.message_id: int = params.get("messageId", 0)
+        self.counters: List[Dict[str, Any]] = params.get("counters", [])
+        self.total_count: int = params.get("totalCount", 0)
+
+    @property
+    def top_reaction(self) -> Optional[str]:
+        """Реакция с наибольшим количеством (или None если реакций нет)."""
+        if not self.counters:
+            return None
+        return max(self.counters, key=lambda c: c.get("count", 0)).get("reaction")
+
+    def __repr__(self) -> str:
+        reactions = ", ".join(f"{c['reaction']}×{c['count']}" for c in self.counters)
+        return f"<ReactionEvent chat={self.chat_id} msg={self.message_id} [{reactions}]>"

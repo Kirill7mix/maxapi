@@ -21,7 +21,7 @@ from maxapi.client import MaxClient, AuthResult, SentCode, AuthError
 from maxapi.session import Session
 from maxapi.protocol import Packet
 from maxapi.constants import OpCode
-from maxapi.types import Message, TypingEvent
+from maxapi.types import Message, TypingEvent, PresenceEvent, ReactionEvent
 from maxapi.formatting import FormattedText
 
 __version__ = "0.2.0"
@@ -32,6 +32,8 @@ __all__ = [
     "OpCode",
     "Message",
     "TypingEvent",
+    "PresenceEvent",
+    "ReactionEvent",
     "FormattedText",
     "AuthResult",
     "SentCode",
