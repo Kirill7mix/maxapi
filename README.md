@@ -1,8 +1,6 @@
 ﻿# maxapi — MAX Messenger Client API
 
-Клиентская библиотека для мессенджера **MAX** (ex-TamTam) от VK.  
-Reverse-engineered из APK v26.9.0 (build 6637).  
-Аналог [Telethon](https://github.com/LonamiWebs/Telethon) для Telegram.
+Неофициальная Python-библиотека для работы с мессенджером **MAX** (ex-TamTam) от VK.
 
 📖 **Документация**: https://Kirill7mix.github.io/maxapi/
 

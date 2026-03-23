@@ -81,11 +81,11 @@
       <table class="params-table">
         <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
         <tbody>
-          <tr><td><code>phone</code></td><td class="type">str</td><td>Номер в формате <code>"+79001234567"</code></td></tr>
+          <tr><td><code>phone</code></td><td class="type">str</td><td>Номер в формате <code>"+79999999999"</code></td></tr>
         </tbody>
       </table>
       <div class="returns"><strong>→ SentCode</strong> — объект с <code>code_length</code>, <code>verify_token</code>, <code>alt_action_duration</code></div>
-      <pre>sent = <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79001234567"</span>)
+      <pre>sent = <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79999999999"</span>)
 print(<span class="st">f"Ожидается {sent.code_length}-значный код"</span>)</pre>
     </div>
   </div>
@@ -223,7 +223,7 @@ print(<span class="st">f"{me['name']} ({me['phone']})"</span>)</pre>
   <p>Сессия хранится в JSON-файле. Пример содержимого <code>my_session.json</code>:</p>
   <pre>{
   <span class="st">"uid"</span>:        <span class="nb">61091213</span>,
-  <span class="st">"phone"</span>:      <span class="st">"+79001234567"</span>,
+  <span class="st">"phone"</span>:      <span class="st">"+79999999999"</span>,
   <span class="st">"auth_token"</span>: <span class="st">"eyJhbGciOiJIUzI1NiJ9..."</span>,
   <span class="st">"proxy_host"</span>: <span class="st">"api.oneme.ru"</span>
 }</pre>
@@ -273,7 +273,7 @@ print(profile[<span class="st">"name"</span>])</pre>
       <pre>{
   <span class="st">"id"</span>:            <span class="nb">61091213</span>,
   <span class="st">"updateTime"</span>:    <span class="nb">1774189702185</span>,
-  <span class="st">"phone"</span>:         <span class="nb">79678082930</span>,
+  <span class="st">"phone"</span>:         <span class="nb">79999999999</span>,
   <span class="st">"names"</span>: [{
     <span class="st">"name"</span>:        <span class="st">"Телеграм"</span>,
     <span class="st">"firstName"</span>:  <span class="st">"Телеграм"</span>,

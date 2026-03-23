@@ -42,26 +42,23 @@
     <h1>MAX API</h1>
     <p>
       Python-библиотека для работы с мессенджером MAX (ex-TamTam / OK Messenger).
-      Реверс-инжиниринг бинарного протокола: TCP/SSL + MessagePack.
+      Поддерживает отправку сообщений, фото, работу с чатами и real-time события.
     </p>
     <div class="hero-meta">
-      <div class="badge-stat"><span class="val">100+</span><span class="lbl">OpCode'ов</span></div>
       <div class="badge-stat"><span class="val">25+</span><span class="lbl">API-методов</span></div>
       <div class="badge-stat"><span class="val">Push ✅</span><span class="lbl">real-time события</span></div>
-      <div class="badge-stat"><span class="val">v26.9.0</span><span class="lbl">APK build 6637</span></div>
       <div class="badge-stat"><span class="val">Python 3.10+</span><span class="lbl">asyncio</span></div>
     </div>
   </div>
 
   <h2>Что это такое?</h2>
   <p>
-    <strong>MAX API</strong> — низкоуровневый клиент к мессенджеру MAX, реализованный на основе
-    реверс-инжиниринга APK версии 26.9.0. Библиотека общается с сервером
-    <code>api.oneme.ru:443</code> по бинарному протоколу (заголовок 10 байт + MessagePack-payload, опционально LZ4).
+    <strong>MAX API</strong> — неофициальная Python-библиотека для мессенджера MAX.
+    Общается с сервером <code>api.oneme.ru:443</code> по бинарному протоколу
+    (заголовок 10 байт + MessagePack-payload, опционально LZ4).
   </p>
   <p>
-    Архитектурно похожа на <strong>Telethon</strong> для Telegram: есть класс <code>MaxClient</code>,
-    методы-корутины, сессия в JSON, context manager.
+    Есть класс <code>MaxClient</code>, методы-корутины, сессия в JSON, context manager.
   </p>
 
   <div class="note">
@@ -118,7 +115,7 @@
 <span class="kw">async def</span> <span class="fn">main</span>():
     <span class="kw">async with</span> <span class="cl">MaxClient</span>(<span class="st">"my_session"</span>) <span class="kw">as</span> client:
         <span class="cm"># Первый вход — по SMS</span>
-        <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79001234567"</span>)
+        <span class="kw">await</span> client.<span class="fn">send_code</span>(<span class="st">"+79999999999"</span>)
         <span class="kw">await</span> client.<span class="fn">sign_in</span>(input(<span class="st">"Код из SMS: "</span>))
 
         <span class="cm"># Профиль и чаты</span>
