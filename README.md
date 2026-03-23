@@ -47,6 +47,14 @@ async def main():
         await client.send_message(chat_id=12345678, text="Привет!")
         await client.send_photo(chat_id=12345678, image="photo.jpg", caption="Подпись")
 
+        # Форматированное сообщение
+        from maxapi import FormattedText
+        fmt = FormattedText().bold("Жирный").add(" и ").italic("курсив")
+        await client.send_message(chat_id=12345678, text=fmt)
+
+        # Пересылка сообщения
+        await client.forward_message(from_chat_id=111, msg_id=222, to_chat_id=333)
+
 asyncio.run(main())
 ```
 
@@ -117,7 +125,8 @@ length   (4 байта)  = [compression_ratio << 24 | payload_length]
 | `get_chats()`        | —       | Чаты из кэша LOGIN (async)   |
 | `poll_chats()`       | 53      | Delta-poll изменённых чатов   |
 | `get_chat_history()` | 49      | История сообщений чата       |
-| `send_message()`     | 64      | Отправка сообщения           |
+| `send_message()`     | 64      | Отправка сообщения (+ FormattedText) |
+| `forward_message()`  | 64      | Пересылка сообщения          |
 | `send_photo()`       | 64+80   | Отправка фото в чат          |
 | `upload_photo()`     | 80/HTTP | Загрузка фото, возврат token |
 | `edit_message()`     | 67      | Редактирование сообщения     |
@@ -140,9 +149,10 @@ length   (4 байта)  = [compression_ratio << 24 | payload_length]
 
 ```
 maxapi/
-├── __init__.py       # Экспорт: MaxClient, Session, Packet, OpCode
+├── __init__.py       # Экспорт: MaxClient, Session, Packet, OpCode, FormattedText
 ├── client.py         # Главный клиент (авторизация + API)
 ├── constants.py      # Опкоды и константы протокола
+├── formatting.py     # FormattedText — форматирование сообщений
 ├── protocol.py       # Кодирование/декодирование пакетов (MessagePack + LZ4)
 ├── session.py        # Хранение сессии (JSON)
 ├── transport.py      # TCP/SSL соединение + чтение/запись пакетов

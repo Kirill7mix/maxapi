@@ -73,6 +73,93 @@
         Библиотека использует <code>int(time.time() * 1000)</code> — уникальный на каждый вызов.
       </div></div>
 
+      <h3>Форматирование текста (<code>elements</code>)</h3>
+      <p>
+        Параметр <code>text</code> принимает как строку, так и объект <code>FormattedText</code>.
+        При передаче <code>FormattedText</code> библиотека автоматически формирует массив <code>elements</code>.
+      </p>
+      <pre><span class="kw">from</span> maxapi.formatting <span class="kw">import</span> FormattedText
+
+fmt = (FormattedText()
+    .<span class="fn">bold</span>(<span class="st">"Жирный"</span>)
+    .<span class="fn">add</span>(<span class="st">" и "</span>)
+    .<span class="fn">italic</span>(<span class="st">"курсив"</span>)
+    .<span class="fn">add</span>(<span class="st">" + "</span>)
+    .<span class="fn">link</span>(<span class="st">"ссылка"</span>, <span class="st">"https://example.com"</span>)
+)
+<span class="kw">await</span> client.<span class="fn">send_message</span>(chat_id, fmt)</pre>
+
+      <p>Поддерживаемые типы форматирования (подтверждено в бою ✅):</p>
+      <table class="params-table">
+        <thead><tr><th>Метод</th><th>Тип элемента</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>.bold(text)</code></td><td><code>STRONG</code></td><td>Жирный текст</td></tr>
+          <tr><td><code>.italic(text)</code></td><td><code>EMPHASIZED</code></td><td>Курсив</td></tr>
+          <tr><td><code>.underline(text)</code></td><td><code>UNDERLINE</code></td><td>Подчёркнутый</td></tr>
+          <tr><td><code>.strike(text)</code></td><td><code>STRIKETHROUGH</code></td><td>Зачёркнутый</td></tr>
+          <tr><td><code>.code(text)</code></td><td><code>MONOSPACED</code></td><td>Моноширинный (код)</td></tr>
+          <tr><td><code>.heading(text)</code></td><td><code>HEADING</code></td><td>Заголовок</td></tr>
+          <tr><td><code>.quote(text)</code></td><td><code>QUOTE</code></td><td>Цитата-блок</td></tr>
+          <tr><td><code>.link(text, url)</code></td><td><code>LINK</code></td><td>Гиперссылка</td></tr>
+          <tr><td><code>.add(text)</code></td><td>—</td><td>Обычный текст (без форматирования)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Wire-формат <code>elements</code></h3>
+      <p>Массив <code>elements</code> передаётся внутри объекта <code>message</code>. Каждый элемент — это объект с полями:</p>
+      <pre>{
+  <span class="st">"type"</span>: <span class="st">"STRONG"</span>,        <span class="cm"># тип форматирования</span>
+  <span class="st">"from"</span>: <span class="nb">15</span>,              <span class="cm"># смещение в символах (опускается если 0)</span>
+  <span class="st">"length"</span>: <span class="nb">6</span>,            <span class="cm"># длина диапазона</span>
+  <span class="st">"attributes"</span>: { ... }   <span class="cm"># только для LINK (содержит url)</span>
+}</pre>
+      <div class="warn"><span class="icon">⚠️</span><div>
+        Поле <code>"from"</code> <strong>не передаётся</strong> если смещение = 0. Сервер не принимает
+        <code>"from": 0</code> — форматирование не отображается. Библиотека обрабатывает это автоматически.
+      </div></div>
+    </div>
+  </div>
+
+  <!-- forward_message -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>forward_message(to_chat_id, from_chat_id, message_id, text="")</code>
+      <span class="method-opcode">MSG_SEND · opcode 64 (link.type=FORWARD)</span>
+    </div>
+    <div class="method-body">
+      <p>Пересылает сообщение в другой (или тот же) чат. Подтверждено в бою ✅</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>to_chat_id</code></td><td class="type">int</td><td>ID чата-получателя</td></tr>
+          <tr><td><code>from_chat_id</code></td><td class="type">int</td><td>ID чата-источника</td></tr>
+          <tr><td><code>message_id</code></td><td class="type">int</td><td>ID пересылаемого сообщения</td></tr>
+          <tr><td><code>text</code></td><td class="type">str</td><td class="optional">Необязательно. Дополнительный текст</td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong> — ответ MSG_SEND</div>
+      <pre><span class="kw">await</span> client.<span class="fn">forward_message</span>(
+    to_chat_id=<span class="nb">34540359</span>,
+    from_chat_id=<span class="nb">63530148</span>,
+    message_id=<span class="nb">116278582161789412</span>
+)</pre>
+      <h3>Wire-формат пересылки</h3>
+      <pre>{
+  <span class="st">"chatId"</span>: <span class="nb">34540359</span>,
+  <span class="st">"message"</span>: {
+    <span class="st">"cid"</span>: <span class="nb">1774269905000</span>,
+    <span class="st">"text"</span>: <span class="st">""</span>,
+    <span class="st">"link"</span>: {
+      <span class="st">"type"</span>: <span class="st">"FORWARD"</span>,
+      <span class="st">"messageId"</span>: <span class="nb">116278505421542491</span>,
+      <span class="st">"chatId"</span>: <span class="nb">63530148</span>
+    }
+  }
+}</pre>
+    </div>
+  </div>
+
   <!-- send_photo -->
   <div class="method">
     <div class="method-header">

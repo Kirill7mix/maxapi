@@ -831,18 +831,34 @@ class MaxClient:
         }
         return await self._send_command(OpCode.CHAT_HISTORY, params)
 
-    async def send_message(self, chat_id: int, text: str, reply_to: int = None, attaches: list = None) -> dict:
+    async def send_message(
+        self,
+        chat_id: int,
+        text: "str | FormattedText",
+        reply_to: int = None,
+        attaches: list = None,
+        elements: list = None,
+    ) -> dict:
         """
         Отправляет текстовое сообщение или сообщение с вложениями (MSG_SEND, opcode 64).
 
-        Формат: chatId + message = {cid, text, attaches, (link с replyTo)}.
+        Формат: chatId + message = {cid, text, elements, attaches, (link с replyTo)}.
 
         Args:
             chat_id: ID чата (int).
-            text: Текст сообщения.
+            text: Текст сообщения (str) или FormattedText с форматированием.
             reply_to: ID сообщения для ответа (int).
             attaches: Список вложений (list of dict).
+            elements: Форматирование текста (list of dict). Если text — FormattedText,
+                      elements берутся из него автоматически.
         """
+        from maxapi.formatting import FormattedText
+
+        # Если передан FormattedText — извлекаем text и elements
+        if isinstance(text, FormattedText):
+            elements = elements or text.elements
+            text = text.text
+
         message: dict = {
             "cid": int(time.time() * 1000),  # уникальный client-side ID для дедупликации
             "text": text,
@@ -853,8 +869,40 @@ class MaxClient:
             message["link"] = {"type": "REPLY", "messageId": int(reply_to)}
         if attaches:
             message["attaches"] = attaches
+        if elements:
+            message["elements"] = elements
         params = {
             "chatId": int(chat_id),
+            "message": message,
+        }
+        return await self._send_command(OpCode.MSG_SEND, params)
+
+    async def forward_message(self, to_chat_id: int, from_chat_id: int, message_id: int, text: str = "") -> dict:
+        """
+        Пересылает сообщение в другой (или тот же) чат (MSG_SEND с link.type=FORWARD).
+
+        Args:
+            to_chat_id: ID чата-получателя.
+            from_chat_id: ID чата-источника.
+            message_id: ID пересылаемого сообщения.
+            text: Дополнительный текст (необязательно).
+
+        Returns:
+            Ответ сервера на MSG_SEND.
+        """
+        message: dict = {
+            "cid": int(time.time() * 1000),
+            "text": text,
+            "detectShare": False,
+            "isLive": False,
+            "link": {
+                "type": "FORWARD",
+                "messageId": int(message_id),
+                "chatId": int(from_chat_id),
+            },
+        }
+        params = {
+            "chatId": int(to_chat_id),
             "message": message,
         }
         return await self._send_command(OpCode.MSG_SEND, params)

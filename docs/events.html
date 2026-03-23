@@ -164,7 +164,14 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
       <tr><td><code>sender_id</code></td><td class="type">int</td><td>UID отправителя</td></tr>
       <tr><td><code>text</code></td><td class="type">str</td><td>Текст сообщения</td></tr>
       <tr><td><code>time_ms</code></td><td class="type">int</td><td>Время отправки (Unix, миллисекунды)</td></tr>
+      <tr><td><code>elements</code></td><td class="type">list[dict]</td><td>Форматирование текста (STRONG, EMPHASIZED, LINK и др.)</td></tr>
+      <tr><td><code>attaches</code></td><td class="type">list[dict]</td><td>Вложения (PHOTO, STICKER, FILE, VIDEO и др.)</td></tr>
+      <tr><td><code>link</code></td><td class="type">dict | None</td><td>Объект ссылки: REPLY (цитата) или FORWARD (пересылка)</td></tr>
       <tr><td><code>is_outgoing</code></td><td class="type">bool</td><td>True — если сообщение отправили мы</td></tr>
+      <tr><td><code>is_reply</code></td><td class="type">bool</td><td>True — если это ответ (цитата) на другое сообщение</td></tr>
+      <tr><td><code>is_forward</code></td><td class="type">bool</td><td>True — если это пересланное сообщение</td></tr>
+      <tr><td><code>reply_to_message</code></td><td class="type">dict | None</td><td>Объект исходного сообщения при REPLY</td></tr>
+      <tr><td><code>forwarded_message</code></td><td class="type">dict | None</td><td>Объект пересланного сообщения при FORWARD</td></tr>
       <tr><td><code>raw</code></td><td class="type">dict</td><td>Полный dict из сервера (params пакета)</td></tr>
     </tbody>
   </table>
@@ -175,7 +182,11 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
     <tbody>
       <tr>
         <td><code>await msg.reply(text)</code></td>
-        <td>Ответить в тот же чат с цитированием исходного сообщения. Аналог <code>await client.send_message(msg.chat_id, text, reply_to=msg.id)</code></td>
+        <td>Ответить в тот же чат с цитированием. Принимает <code>str</code> или <code>FormattedText</code>.</td>
+      </tr>
+      <tr>
+        <td><code>await msg.forward(to_chat_id)</code></td>
+        <td>Переслать это сообщение в другой чат.</td>
       </tr>
     </tbody>
   </table>
@@ -189,6 +200,7 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
     <tbody>
       <tr><td><code>chat_id</code></td><td class="type">int</td><td>ID чата, в котором печатают</td></tr>
       <tr><td><code>sender_id</code></td><td class="type">int</td><td>UID пользователя, который печатает</td></tr>
+      <tr><td><code>typing_type</code></td><td class="type">str | None</td><td>Тип набора: <code>None</code> (текст), <code>"STICKER"</code> и т.д.</td></tr>
       <tr><td><code>raw</code></td><td class="type">dict</td><td>Полный dict из сервера</td></tr>
     </tbody>
   </table>
