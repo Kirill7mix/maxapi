@@ -54,12 +54,15 @@ asyncio.run(main())
 
 ## Юзербот (обработка событий)
 
+> **Требуется готовая сессия.** Файл `my_session.json` должен уже существовать.
+> Если его нет — сначала пройди авторизацию из раздела [Быстрый старт](#быстрый-старт).
+
 ```python
 import asyncio
 from maxapi import MaxClient
 from maxapi.types import Message
 
-client = MaxClient("my_session")
+client = MaxClient("my_session")  # загружает my_session.json
 
 @client.on_message
 async def on_message(msg: Message):
@@ -68,7 +71,7 @@ async def on_message(msg: Message):
     print(f"[{msg.chat_id}] {msg.sender_name}: {msg.text}")
     await client.send_message(msg.chat_id, text="Привет!", reply_to=msg.id)
 
-asyncio.run(client.run())
+asyncio.run(client.run())  # connect() + run_until_disconnected()
 ```
 
 ---

@@ -63,17 +63,25 @@
   </div>
 
   <h2>Базовый шаблон юзербота</h2>
+  <div class="note">
+    <span class="icon">ℹ️</span>
+    <div>
+      Юзербот требует готовой сессии — файл <code>my_session.json</code> должен уже существовать.
+      Если его нет, сначала пройди авторизацию через <a href="auth.html">auth</a> или <a href="quickstart.html">быстрый старт</a>.
+    </div>
+  </div>
   <pre><span class="kw">import</span> asyncio
-<span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient, Message
+<span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient
+<span class="kw">from</span> maxapi.types <span class="kw">import</span> Message
 
-client = MaxClient(<span class="st">"my_session"</span>)
+client = MaxClient(<span class="st">"my_session"</span>)  <span class="cm"># загружает my_session.json</span>
 
 <span class="nd">@client.on_message</span>
 <span class="kw">async def</span> <span class="fn">handler</span>(msg: Message):
     <span class="kw">if not</span> msg.is_outgoing:
         <span class="kw">await</span> msg.<span class="fn">reply</span>(<span class="st">"Привет от MAX API!"</span>)
 
-asyncio.<span class="fn">run</span>(client.<span class="fn">start</span>())  <span class="cm"># connect + run_until_disconnected</span></pre>
+asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span class="cm"># connect() + run_until_disconnected()</span></pre>
 
   <!-- on_message -->
   <div class="method">
