@@ -24,7 +24,10 @@ import json
 import logging
 import time
 import uuid
-from typing import Optional, List, Dict, Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Callable, Awaitable
+
+if TYPE_CHECKING:
+    from maxapi.formatting import FormattedText
 
 import aiohttp
 
@@ -869,7 +872,7 @@ class MaxClient:
     async def send_message(
         self,
         chat_id: int,
-        text: "str | FormattedText",
+        text: "str | FormattedText",  # noqa: F821
         reply_to: int = None,
         attaches: list = None,
         elements: list = None,
