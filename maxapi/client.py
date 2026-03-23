@@ -257,6 +257,21 @@ class MaxClient:
         except asyncio.CancelledError:
             pass
 
+    async def run(self) -> None:
+        """
+        Удобный ярлык: подключиться и ждать до разрыва соединения.
+
+        Использование::
+
+            @client.on_message
+            async def handler(msg):
+                ...
+
+            asyncio.run(client.run())
+        """
+        await self.connect()
+        await self.run_until_disconnected()
+
     # ── OK API (HTTP) ───────────────────────────────
 
     @staticmethod
