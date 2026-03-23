@@ -209,6 +209,10 @@ print(<span class="st">f"{me['name']} ({me['phone']})"</span>)</pre>
         <span class="icon">ℹ️</span>
         <div><code>client.me</code> — это уже нормализованный кэш библиотеки. Метод <code>fetch_profile()</code> возвращает другой формат: сырой объект <code>contact</code> c массивом <code>names</code>.</div>
       </div>
+      <div class="note">
+        <span class="icon">ℹ️</span>
+        <div>Ключи в <code>client.me</code> тоже нормализованы библиотекой: используйте <code>account_status</code>, <code>first_name</code>, <code>last_name</code>. Ключ <code>accountStatus</code> относится к сырому ответу <code>fetch_profile()</code>, а не к <code>client.me</code>.</div>
+      </div>
     </div>
   </div>
 

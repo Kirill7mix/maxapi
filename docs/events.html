@@ -80,6 +80,10 @@
       Если его нет, сначала пройди авторизацию через <a href="auth.html">auth</a> или <a href="quickstart.html">быстрый старт</a>.
     </div>
   </div>
+  <div class="warn">
+    <span class="icon">⚠️</span>
+    <div>В <code>MaxClient(...)</code> передаётся <strong>имя сессии без расширения</strong>: правильно <code>MaxClient("my_session")</code>, неправильно <code>MaxClient("my_session.json")</code>. Клиент сам дописывает <code>.json</code>.</div>
+  </div>
   <pre><span class="kw">import</span> asyncio
 <span class="kw">from</span> maxapi <span class="kw">import</span> MaxClient
 <span class="kw">from</span> maxapi.types <span class="kw">import</span> Message
@@ -175,6 +179,11 @@ asyncio.<span class="fn">run</span>(client.<span class="fn">run</span>())  <span
   <div class="note">
     <span class="icon">ℹ️</span>
     <div>Если нужен исходный серверный payload, он лежит в <code>msg.raw</code>. Это полезно, когда надо обратиться к нестандартному полю, которое ещё не вынесено в отдельный атрибут класса.</div>
+  </div>
+
+  <div class="note">
+    <span class="icon">ℹ️</span>
+    <div>Не путайте <code>Message</code> из событий с объектами, которые возвращают обычные API-методы. У события поля нормализованы в snake_case: <code>chat_id</code>, <code>sender_id</code>, <code>is_outgoing</code>. У сырых серверных <code>dict</code> часто остаются wire-ключи вроде <code>chatId</code> или <code>accountStatus</code>.</div>
   </div>
 
   <table class="params-table">
