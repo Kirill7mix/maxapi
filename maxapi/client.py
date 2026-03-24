@@ -1120,8 +1120,8 @@ class MaxClient:
         Returns:
             dict с ключами:
               ``chats``    — совпадения из кэша LOGIN
-              ``contacts`` — результаты CONTACT_SEARCH
-              ``public``   — результаты PUBLIC_SEARCH
+              ``contacts`` — список из CONTACT_SEARCH.result
+              ``public``   — список из PUBLIC_SEARCH.result
         """
         q = query.lower().strip()
 
@@ -1152,8 +1152,8 @@ class MaxClient:
 
         return {
             "chats":    matched_chats,
-            "contacts": contacts_result.get("contacts", []) if isinstance(contacts_result, dict) else [],
-            "public":   public_result.get("chats",    []) if isinstance(public_result,   dict) else [],
+            "contacts": contacts_result.get("result", []) if isinstance(contacts_result, dict) else [],
+            "public":   public_result.get("result", []) if isinstance(public_result, dict) else [],
         }
 
     async def send_typing(self, chat_id: int) -> None:

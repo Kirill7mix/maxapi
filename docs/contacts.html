@@ -164,11 +164,19 @@ removed = <span class="kw">await</span> client.<span class="fn">get_contacts</sp
           <tr><td><code>query</code></td><td class="type">str</td><td>Поисковый запрос: имя, фамилия или номер телефона</td></tr>
         </tbody>
       </table>
-      <div class="returns"><strong>→ dict</strong> с ключом <code>contacts</code></div>
+      <div class="returns"><strong>→ dict</strong> с ключами <code>result</code> и <code>total</code></div>
       <div class="note"><span class="icon">ℹ️</span><div>Внутри обёртка автоматически добавляет обязательный параметр <code>count</code>. Голый wire-запрос <code>CONTACT_SEARCH</code> без него сервер отклоняет ошибкой <code>proto.payload</code>.</div></div>
-      <pre>results = <span class="kw">await</span> client.<span class="fn">search_contacts</span>(<span class="st">"Иван Петров"</span>)
-<span class="kw">for</span> c <span class="kw">in</span> results.get(<span class="st">"contacts"</span>, []):
-    print(c[<span class="st">"id"</span>], c.get(<span class="st">"name"</span>))</pre>
+      <pre>results = <span class="kw">await</span> client.<span class="fn">search_contacts</span>(<span class="st">"Новости"</span>)
+
+print(results[<span class="st">"total"</span>])
+<span class="kw">for</span> c <span class="kw">in</span> results.get(<span class="st">"result"</span>, []):
+    print(c.get(<span class="st">"id"</span>), c.get(<span class="st">"name"</span>))</pre>
+
+      <h3>Пример реального ответа</h3>
+      <pre>{
+  <span class="st">"result"</span>: [],
+  <span class="st">"total"</span>: <span class="nb">0</span>
+}</pre>
     </div>
   </div>
 
@@ -206,8 +214,9 @@ removed = <span class="kw">await</span> client.<span class="fn">get_contacts</sp
       </table>
       <p><code>contacts</code> и <code>public</code> запрашиваются параллельно через <code>asyncio.gather()</code>.</p>
       <div class="note"><span class="icon">ℹ️</span><div>Если один из серверных источников вернул ошибку, метод не валится целиком: библиотека подставляет пустой список только для проблемного источника и возвращает частичный результат.</div></div>
+      <div class="note"><span class="icon">ℹ️</span><div><code>contacts</code> берётся из <code>CONTACT_SEARCH.result</code>, а <code>public</code> — из <code>PUBLIC_SEARCH.result</code>. Внутри элементов <code>public</code> может встречаться сырое поле <code>previewData</code> типа bytes, поэтому прямой <code>json.dumps(...)</code> без <code>default=...</code> может падать.</div></div>
 
-      <pre>results = <span class="kw">await</span> client.<span class="fn">search</span>(<span class="st">"Иван"</span>)
+      <pre>results = <span class="kw">await</span> client.<span class="fn">search</span>(<span class="st">"Новости"</span>)
 
 <span class="kw">for</span> chat <span class="kw">in</span> results[<span class="st">"chats"</span>]:
     print(<span class="st">"Чат:"</span>, chat[<span class="st">"id"</span>])
@@ -216,7 +225,32 @@ removed = <span class="kw">await</span> client.<span class="fn">get_contacts</sp
     print(<span class="st">"Контакт:"</span>, c.get(<span class="st">"name"</span>), c[<span class="st">"id"</span>])
 
 <span class="kw">for</span> p <span class="kw">in</span> results[<span class="st">"public"</span>]:
-    print(<span class="st">"Публичный чат:"</span>, p.get(<span class="st">"name"</span>))</pre>
+    chat = p.get(<span class="st">"chat"</span>, {})
+    print(<span class="st">"Публичный чат:"</span>, chat.get(<span class="st">"title"</span>), chat.get(<span class="st">"link"</span>))</pre>
+
+      <h3>Пример реального PUBLIC_SEARCH-ответа</h3>
+      <pre>{
+  <span class="st">"result"</span>: [
+    {
+      <span class="st">"chat"</span>: {
+        <span class="st">"id"</span>: <span class="nb">-69106129488590</span>,
+        <span class="st">"type"</span>: <span class="st">"CHANNEL"</span>,
+        <span class="st">"title"</span>: <span class="st">"Новости"</span>,
+        <span class="st">"link"</span>: <span class="st">"https://max.ru/politics_today"</span>,
+        <span class="st">"participantsCount"</span>: <span class="nb">30205</span>,
+        <span class="st">"description"</span>: <span class="st">"Главные новости из России и мира"</span>
+      },
+      <span class="st">"highlights"</span>: [<span class="st">"Новости"</span>, <span class="st">"новости"</span>]
+    }
+  ],
+  <span class="st">"total"</span>: <span class="nb">7</span>,
+  <span class="st">"ucpQId"</span>: <span class="st">"f75fa88e0e24be98"</span>
+}</pre>
+
+      <h3>Вывод по живой проверке</h3>
+      <pre>search_contacts("Новости") -> {"result": [], "total": 0}
+PUBLIC_SEARCH("Новости") -> 7 публичных результатов
+search("Новости") -> chats=2, contacts=0, public=7</pre>
     </div>
   </div>
 

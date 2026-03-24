@@ -1,0 +1,112 @@
+MAX API docs-first checklist
+
+Правило:
+- Здесь только методы из документации docs/ без opcodes.html
+- Дубликаты убраны: метод живет только на самой ранней странице, где он описан
+- Галочка ставится только после реальной проверки
+
+[docs/index.html]
+- Нет проверяемых функций
+
+[docs/quickstart.html]
+- [x] connect()
+- [x] send_code(phone)
+- [x] sign_in(code)
+- [ ] sign_up(first_name, last_name="", register_token=None)
+- [x] disconnect()
+- [x] fetch_profile(user_id=None)
+- [x] send_message(chat_id, text, reply_to=None)
+- [x] get_chat_history(chat_id, count=20, from_msg=None)
+
+[docs/auth.html]
+- [ ] resend_code()
+- [ ] login_with_token(auth_token)
+- [x] get_profile()
+
+[docs/chats.html]
+- [x] get_chats()
+- [?] poll_chats(count=50)
+- [!] get_chat_info(chat_id)
+- [!] create_chat(title, member_ids=None)
+- [x] get_chat_members(chat_id, count=100)
+- [x] join_chat(link)
+- [x] leave_chat(chat_id)
+
+[docs/messages.html]
+- [x] forward_message(to_chat_id, from_chat_id, message_id)
+- [x] send_photo(chat_id, image, caption="", reply_to=None)
+- [x] upload_photo(chat_id, image_data)
+- [x] edit_message(chat_id, msg_id, text)
+- [x] delete_messages(chat_id, msg_ids, delete_for_all=False) +
+- [x] send_typing(chat_id)
+- [x] mark_read(chat_id, msg_id)
+- [x] react(chat_id, msg_id, reaction)
+- [x] cancel_reaction(chat_id, msg_id)
+- [x] send_sticker(chat_id, sticker_id)
+- [x] get_link_info(url)
+- [x] FormattedText.bold(text)
+- [x] FormattedText.italic(text)
+- [x] FormattedText.underline(text)
+- [x] FormattedText.strike(text)
+- [x] FormattedText.code(text)
+- [x] FormattedText.heading(text)
+- [x] FormattedText.quote(text)
+- [x] FormattedText.link(text, url)
+- [x] FormattedText.add(text)
+
+[docs/contacts.html]
+- [x] get_contact_by_phone(phone)
+- [ ] get_contacts(status="BLOCKED")
+- [x] search_contacts(query)
+- [x] search(query)
+- [ ] _send_command(OpCode.CONTACT_INFO, {"uid": uid})
+- [ ] _send_command(OpCode.CONTACT_PRESENCE, {"uid": uid})
+
+[docs/events.html]
+- [ ] @client.on_message
+- [ ] @client.on(opcode)
+- [ ] @client.on_presence
+- [ ] @client.on_reaction
+- [ ] run_until_disconnected()
+- [ ] Message.reply(text)
+- [ ] Message.forward(to_chat_id)
+
+Текущий старт:
+- Первый прогон: connect() -> send_code() -> sign_in() / sign_up() -> get_profile() -> fetch_profile() -> disconnect()
+
+Последняя проверка:
+- [x] Создание новой сессии TEST.json через SMS-вход подтверждено
+- [x] connect(), send_code(), sign_in(), get_profile(), fetch_profile(), disconnect() подтверждены реальным прогоном
+- [!] Во время sign_in() появилось нефатальное сообщение: "Не удалось обновить OK API сессию (auth.anonymLogin): anonymLogin failed: AUTH_LOGIN : Valid token for anonym user not found"
+- [!] Несмотря на это, вход завершился успешно, uid=7162153, кэш-профиль и fetch_profile() отработали корректно
+- [x] get_chats() подтвержден на TEST.json: в кэше LOGIN найдено 18 чатов, чат 63530148 присутствует как DIALOG/ACTIVE
+- [x] get_chat_history(chat_id=63530148, count=5) подтвержден: сервер вернул 5 сообщений без ошибки
+- [x] send_message(chat_id=63530148, text) подтвержден: chatId/message/unread/mark присутствуют, id=116279451328910734
+- [?] poll_chats(count=50) пока не подтвержден: два прогона подряд вернули delta chats=0
+- [?] Во втором прогоне после пустого delta скрипт отправил контрольное сообщение id=116279467331755822 и повторный poll_chats() все равно вернул 0
+- [!] На текущий момент это выглядит как несоответствие документации или баг реализации/протокола delta-sync
+- [?] Отдельная проба на новый чат тоже не подтвердила гипотезу: при создании нового чата в 15-секундном окне poll_chats(count=50) снова вернул delta chats=0
+- [x] mark_read(chat_id=63530148, msg_id=116279307314491096) подтвержден: сервер вернул {'mark': 1774279562004, 'unread': 0}
+- [x] send_typing(chat_id=63530148) подтвержден визуально: статус 'печатает' наблюдался на втором аккаунте
+- [x] react(chat_id=63530148, msg_id=116279500454641809, reaction='🤣') подтвержден визуально: реакция видна в клиенте
+- [x] cancel_reaction(chat_id=63530148, msg_id=116279518797632301) подтвержден визуально: реакция снялась, но с заметной задержкой
+- [x] forward_message(to_chat_id=63530148, from_chat_id=63530148, message_id=116279518797632301) подтвержден: сервер вернул новое сообщение id=116279519598243638
+- [x] get_link_info('https://github.com') подтвержден: метод вернул dict с error='link.not.found', что соответствует предупреждению в docs о нефатальном ответе без исключения
+- [x] edit_message(chat_id=63530148, msg_id=116279537855190878, text=...) подтвержден: сервер вернул message со status='EDITED' и новый text; история тоже показала обновленный текст
+- [x] delete_messages(chat_id=63530148, msg_ids=[116279537855190878]) подтвержден: сервер вернул {'chatId': 63530148, 'messageIds': [116279537855190878]}, после чего сообщение исчезло из истории
+- [x] delete-for-all подтвержден: сырой MSG_DELETE с {'forMe': False, 'itemType': 'REGULAR', 'notDeleteMessageFromDb': False} для msg_id=116279602318834983 удалил сообщение у обеих сторон; этот режим вынесен в библиотечный параметр delete_for_all=True
+- [x] upload_photo(chat_id=63530148, image_data=tiny_png) подтвержден: метод вернул непустой photoToken, prefix='Q5Al+gvu84XXw4QJ8fS4OWCL'
+- [x] send_photo(chat_id=63530148, image=tiny_png, caption=..., reply_to=116279643073429583) подтвержден: сервер вернул message id=116279643111621707, attaches[0]._type='PHOTO', photoId=9105691177, baseUrl присутствует, reply link присутствует
+- [x] send_sticker(chat_id=63530148, sticker_id=1083866299) подтвержден: сервер вернул message id=116279643121667172, attaches[0]._type='STICKER', stickerId=1083866299
+- [x] FormattedText.* подтвержден на kiril_session в chat_id=0 (Избранное): смешанное форматирование по кускам сохранилось и в прямом ответе send_message(), и в get_chat_history(); zero-offset кейс тоже подтвержден для первого элемента без поля from
+- [x] get_chat_members(chat_id=-72482388153741) подтвержден на TEST и kiril_session: owner/member-чаты вернули members count=2; get_chat_members(chat_id=-72479482418573) на kiril_session вернул members count=1
+- [!] get_chat_members(chat_id=-71387026671037) на TEST для CHANNEL вернул dict-ошибку {'error': 'chat.denied', 'message': 'User is not admin', ...}; значит метод рабочий, но права доступа зависят от типа чата и роли
+- [x] join_chat('https://max.ru/join/m-42HQ5MKZRaKKWqutxU1CZrJILjdy2WiWFFZ0FaVkc') подтвержден на TEST: сервер вернул chat id=-72479482418573 и control event 'joinByLink'
+- [x] leave_chat(chat_id=-72479482418573) подтвержден на TEST: сервер вернул message.attaches[0]._type='CONTROL' и event='leave'
+- [!] create_chat(title=...) на kiril_session стабильно возвращает {'error': 'proto.opcode', 'message': 'Unknown opcode', ...}; текущая документация для Python-обёртки должна считать метод проблемным/неподтвержденным
+- [!] get_chat_info(chat_id=63530148) на DIALOG вернул dict-ошибку {'error': 'proto.payload', 'message': "'chatIds' or 'link' must be present", ...}
+- [!] get_chat_info(chat_id=-71387026671037) на CHANNEL с отрицательным id разорвал соединение; это сильное расхождение с docs, где group/channel-case описан как рабочий
+- [x] get_contact_by_phone(phone='+79678082930') подтвержден на TEST через CONTACT_INFO_BY_PHONE: сервер вернул contact.id=61091213; тот же метод для +70000000000 и +79999999999 вернул error='contact.not.found'
+- [x] search_contacts('Новости') подтвержден на TEST: CONTACT_SEARCH вернул dict с ключами {'result', 'total'}, фактический ответ был {'result': [], 'total': 0}; документация обновлена с правильной формой ответа
+- [x] PUBLIC_SEARCH('Новости') подтвержден на TEST: сырой opcode 60 вернул dict с ключами {'result', 'total', 'ucpQId'} и total=7; элементы result содержат объект chat и могут включать bytes-поля в previewData
+- [x] search('Новости') подтвержден после правки обёртки: локальный кэш дал chats=2, CONTACT_SEARCH дал contacts=0, PUBLIC_SEARCH теперь корректно попадает в public=7 через ключ result
