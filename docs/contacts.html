@@ -96,6 +96,59 @@ removed = <span class="kw">await</span> client.<span class="fn">get_contacts</sp
     </div>
   </div>
 
+  <!-- get_contact_by_phone -->
+  <div class="method">
+    <div class="method-header">
+      <span class="method-badge badge-async">async</span>
+      <code>get_contact_by_phone(phone)</code>
+      <span class="method-opcode">CONTACT_INFO_BY_PHONE · opcode 46</span>
+    </div>
+    <div class="method-body">
+      <p>Ищет аккаунт по номеру телефона. Подтверждено ✅</p>
+      <table class="params-table">
+        <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>phone</code></td><td class="type">str</td><td>Номер в формате <code>"+79999999999"</code> или <code>"79999999999"</code></td></tr>
+        </tbody>
+      </table>
+      <div class="returns"><strong>→ dict</strong></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Живая проверка на реальной сессии подтвердила, что метод отличает существующий номер от несуществующего. Для найденного аккаунта сервер обычно возвращает <code>{"contact": {...}}</code>, а для отсутствующего — обычный dict с <code>error="contact.not.found"</code>.</div></div>
+      <pre>result = <span class="kw">await</span> client.<span class="fn">get_contact_by_phone</span>(<span class="st">"+79999999999"</span>)
+
+<span class="kw">if</span> result.get(<span class="st">"contact"</span>):
+    print(<span class="st">"Аккаунт найден"</span>, result[<span class="st">"contact"</span>][<span class="st">"id"</span>])
+<span class="kw">else</span>:
+    print(result.get(<span class="st">"error"</span>))</pre>
+
+      <h3>Пример успешного ответа</h3>
+      <pre>{
+  <span class="st">"contact"</span>: {
+    <span class="st">"id"</span>: <span class="nb">61091213</span>,
+    <span class="st">"updateTime"</span>: <span class="nb">1774268217766</span>,
+    <span class="st">"names"</span>: [
+      {
+        <span class="st">"name"</span>: <span class="st">"Телеграм"</span>,
+        <span class="st">"firstName"</span>: <span class="st">"Телеграм"</span>,
+        <span class="st">"lastName"</span>: <span class="st">""</span>,
+        <span class="st">"type"</span>: <span class="st">"ONEME"</span>
+      }
+    ],
+    <span class="st">"options"</span>: [<span class="st">"TT"</span>, <span class="st">"ONEME"</span>],
+    <span class="st">"accountStatus"</span>: <span class="nb">0</span>,
+    <span class="st">"country"</span>: <span class="st">""</span>
+  }
+}</pre>
+
+      <h3>Пример ответа, если номер не найден</h3>
+      <pre>{
+  <span class="st">"error"</span>: <span class="st">"contact.not.found"</span>,
+  <span class="st">"message"</span>: <span class="st">"Cannot found contact by phone"</span>,
+  <span class="st">"localizedMessage"</span>: <span class="st">"Контакт не найден"</span>,
+  <span class="st">"title"</span>: <span class="st">"Контакт не найден"</span>
+}</pre>
+    </div>
+  </div>
+
   <!-- search_contacts -->
   <div class="method">
     <div class="method-header">

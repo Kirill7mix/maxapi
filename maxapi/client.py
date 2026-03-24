@@ -1091,6 +1091,20 @@ class MaxClient:
         """Поиск контактов (CONTACT_SEARCH, opcode 37)."""
         return await self._send_command(OpCode.CONTACT_SEARCH, {"query": query, "count": 40})
 
+    async def get_contact_by_phone(self, phone: str) -> dict:
+        """
+        Ищет пользователя по номеру телефона (CONTACT_INFO_BY_PHONE, opcode 46).
+
+        Args:
+            phone: Номер телефона в формате "+79999999999" или "79999999999".
+
+        Returns:
+            dict: На успехе обычно возвращает ``{"contact": {...}}``.
+            Если контакт не найден, сервер возвращает обычный dict с
+            ``error='contact.not.found'``.
+        """
+        return await self._send_command(OpCode.CONTACT_INFO_BY_PHONE, {"phone": phone})
+
     async def search(self, query: str) -> Dict[str, Any]:
         """
         Глобальный поиск — аналог get_entity() в Telethon.
