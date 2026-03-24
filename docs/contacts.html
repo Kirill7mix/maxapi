@@ -200,7 +200,9 @@ print(results[<span class="st">"total"</span>])
       </table>
 
       <div class="returns"><strong>→ dict</strong> с ключами:
-        <code>chats</code>, <code>contacts</code>, <code>public</code>
+        <code>chats</code>, <code>contacts</code>, <code>public</code>,
+        <code>contacts_total</code>, <code>public_total</code>, <code>public_ucpQId</code>,
+        <code>contacts_raw</code>, <code>public_raw</code>
       </div>
 
       <h3>Источники результатов</h3>
@@ -214,9 +216,14 @@ print(results[<span class="st">"total"</span>])
       </table>
       <p><code>contacts</code> и <code>public</code> запрашиваются параллельно через <code>asyncio.gather()</code>.</p>
       <div class="note"><span class="icon">ℹ️</span><div>Если один из серверных источников вернул ошибку, метод не валится целиком: библиотека подставляет пустой список только для проблемного источника и возвращает частичный результат.</div></div>
-      <div class="note"><span class="icon">ℹ️</span><div><code>contacts</code> берётся из <code>CONTACT_SEARCH.result</code>, а <code>public</code> — из <code>PUBLIC_SEARCH.result</code>. Внутри элементов <code>public</code> может встречаться сырое поле <code>previewData</code> типа bytes, поэтому прямой <code>json.dumps(...)</code> без <code>default=...</code> может падать.</div></div>
+      <div class="note"><span class="icon">ℹ️</span><div><code>contacts</code> берётся из <code>CONTACT_SEARCH.result</code>, а <code>public</code> — из <code>PUBLIC_SEARCH.result</code>. Чтобы не терять служебные поля вроде <code>total</code> и <code>ucpQId</code>, метод также возвращает полные wire-ответы в <code>contacts_raw</code> и <code>public_raw</code>.</div></div>
+      <div class="note"><span class="icon">ℹ️</span><div>Внутри элементов <code>public</code>/<code>public_raw</code> может встречаться сырое поле <code>previewData</code> типа bytes, поэтому прямой <code>json.dumps(...)</code> без <code>default=...</code> может падать.</div></div>
 
       <pre>results = <span class="kw">await</span> client.<span class="fn">search</span>(<span class="st">"Новости"</span>)
+
+    print(results[<span class="st">"public_total"</span>])
+    print(results[<span class="st">"public_ucpQId"</span>])
+    print(results[<span class="st">"public_raw"</span>][<span class="st">"total"</span>])
 
 <span class="kw">for</span> chat <span class="kw">in</span> results[<span class="st">"chats"</span>]:
     print(<span class="st">"Чат:"</span>, chat[<span class="st">"id"</span>])
@@ -250,7 +257,14 @@ print(results[<span class="st">"total"</span>])
       <h3>Вывод по живой проверке</h3>
       <pre>search_contacts("Новости") -> {"result": [], "total": 0}
 PUBLIC_SEARCH("Новости") -> 7 публичных результатов
-search("Новости") -> chats=2, contacts=0, public=7</pre>
+    search("Новости") -> chats=2, contacts=0, public=7</pre>
+
+      <h3>Проверка на TEST для "Мама" и "М"</h3>
+      <pre>search_contacts("Мама") -> total=0, result=[]
+    search("Мама") -> chats=0, contacts=0, public=3
+
+    search_contacts("М") -> total=0, result=[]
+    search("М") -> chats=0, contacts=0, public=4</pre>
     </div>
   </div>
 

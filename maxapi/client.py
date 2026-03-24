@@ -1122,6 +1122,11 @@ class MaxClient:
               ``chats``    — совпадения из кэша LOGIN
               ``contacts`` — список из CONTACT_SEARCH.result
               ``public``   — список из PUBLIC_SEARCH.result
+              ``contacts_total`` — CONTACT_SEARCH.total
+              ``public_total``   — PUBLIC_SEARCH.total
+              ``public_ucpQId``  — PUBLIC_SEARCH.ucpQId
+              ``contacts_raw``   — полный ответ CONTACT_SEARCH
+              ``public_raw``     — полный ответ PUBLIC_SEARCH
         """
         q = query.lower().strip()
 
@@ -1150,10 +1155,18 @@ class MaxClient:
         if isinstance(public_result,   Exception):
             public_result   = {}
 
+        contacts = contacts_result.get("result", []) if isinstance(contacts_result, dict) else []
+        public = public_result.get("result", []) if isinstance(public_result, dict) else []
+
         return {
             "chats":    matched_chats,
-            "contacts": contacts_result.get("result", []) if isinstance(contacts_result, dict) else [],
-            "public":   public_result.get("result", []) if isinstance(public_result, dict) else [],
+            "contacts": contacts,
+            "public":   public,
+            "contacts_total": contacts_result.get("total", len(contacts)) if isinstance(contacts_result, dict) else len(contacts),
+            "public_total": public_result.get("total", len(public)) if isinstance(public_result, dict) else len(public),
+            "public_ucpQId": public_result.get("ucpQId") if isinstance(public_result, dict) else None,
+            "contacts_raw": contacts_result if isinstance(contacts_result, dict) else {},
+            "public_raw":   public_result if isinstance(public_result, dict) else {},
         }
 
     async def send_typing(self, chat_id: int) -> None:

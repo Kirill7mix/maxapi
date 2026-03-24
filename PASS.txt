@@ -110,3 +110,4 @@ MAX API docs-first checklist
 - [x] search_contacts('Новости') подтвержден на TEST: CONTACT_SEARCH вернул dict с ключами {'result', 'total'}, фактический ответ был {'result': [], 'total': 0}; документация обновлена с правильной формой ответа
 - [x] PUBLIC_SEARCH('Новости') подтвержден на TEST: сырой opcode 60 вернул dict с ключами {'result', 'total', 'ucpQId'} и total=7; элементы result содержат объект chat и могут включать bytes-поля в previewData
 - [x] search('Новости') подтвержден после правки обёртки: локальный кэш дал chats=2, CONTACT_SEARCH дал contacts=0, PUBLIC_SEARCH теперь корректно попадает в public=7 через ключ result
+- [x] Дополнительная проверка на TEST: search_contacts('Мама') и search_contacts('М') вернули total=0/result=[], тогда как search('Мама') вернул public=3, а search('М') вернул public=4; из-за этого search() расширен и теперь сохраняет полный wire-ответ в contacts_raw/public_raw вместе с contacts_total/public_total/public_ucpQId
